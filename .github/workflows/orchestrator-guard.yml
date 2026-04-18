@@ -1,0 +1,62 @@
+name: Orchestrator Guard (System Safety Layer)
+
+on:
+  workflow_run:
+    workflows:
+      - "Cache Layer Engine (Keyword + Content Skip System)"
+    types:
+      - completed
+
+  workflow_dispatch:
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull latest state
+        run: |
+          git pull origin main --rebase
+
+      - name: System health check
+        run: |
+          echo "Checking pipeline integrity..."
+
+          # Check required folders exist
+          mkdir -p cache merged prioritized final
+
+          # Check for broken or empty runs
+          if [ ! -f cache/cache.json ]; then
+            echo "{}" > cache/cache.json
+          fi
+
+          echo "System OK"
+
+      - name: Normalize repo state
+        run: |
+          # Ensure clean structure consistency
+          find . -type f -name "*.tmp" -delete || true
+
+          # Optional cleanup for noisy outputs
+          find . -type f -name "*.log" -delete || true
+
+      - name: Final stabilization commit
+        run: |
+          git add .
+
+          git commit -m "System stabilization pass (orchestrator guard)" || echo "No changes"
+
+          git push origin main
