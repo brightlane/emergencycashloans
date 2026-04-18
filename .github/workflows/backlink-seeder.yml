@@ -2,22 +2,51 @@ name: Backlink Seeder (Debug Safe)
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show repo structure
+      - name: Show system info
         run: |
-          echo "ROOT:"
+          echo "🚀 BACKLINK SEEDER DEBUG MODE"
+          echo "Runner started successfully"
+          uname -a
+
+      - name: Show repo structure (root)
+        run: |
+          echo "📁 ROOT DIRECTORY:"
           ls -la
 
-          echo "PAGES:"
-          ls -la pages || echo "No pages folder"
+      - name: Check pages folder
+        run: |
+          echo "📄 PAGES DIRECTORY:"
+          if [ -d "pages" ]; then
+            ls -la pages
+          else
+            echo "No pages folder found"
+          fi
 
-      - name: Confirm workflow runs
-        run: echo "Workflow executed successfully"
+      - name: Simulate backlink generation
+        run: |
+          mkdir -p backlinks
+
+          echo "https://example.com/page1 -> backlink test 1" > backlinks/link1.txt
+          echo "https://example.com/page2 -> backlink test 2" > backlinks/link2.txt
+          echo "https://example.com/page3 -> backlink test 3" > backlinks/link3.txt
+
+      - name: Display generated backlinks
+        run: |
+          echo "🔗 GENERATED BACKLINKS:"
+          cat backlinks/link1.txt
+          cat backlinks/link2.txt
+          cat backlinks/link3.txt
+
+      - name: Confirm execution success
+        run: echo "✅ Workflow executed successfully"
