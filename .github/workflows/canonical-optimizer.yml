@@ -1,0 +1,94 @@
+name: SEO Canonical + Duplicate Control
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  canonical:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # =========================
+      # CHECKOUT
+      # =========================
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # =========================
+      # VERIFY PAGES
+      # =========================
+      - name: Check pages folder
+        run: |
+          if [ ! -d pages ]; then
+            echo "No pages found - skipping"
+            exit 0
+          fi
+
+      # =========================
+      # ADD CANONICAL TAGS
+      # =========================
+      - name: Inject canonical URLs
+        run: |
+          BASE="https://brightlane.github.io/emergencycashloans"
+
+          for file in pages/*.html; do
+
+            if [ -f "$file" ]; then
+
+              filename=$(basename "$file")
+
+              canonical="$BASE/pages/$filename"
+
+              # remove old canonical if exists (avoid duplicates)
+              sed -i '/rel="canonical"/d' "$file"
+
+              # inject canonical inside <head>
+              sed -i "/<head>/a \
+<link rel=\"canonical\" href=\"$canonical\">" "$file"
+
+            fi
+
+          done
+
+      # =========================
+      # BASIC DUPLICATE DETECTION
+      # =========================
+      - name: Remove duplicate pages (basic check)
+        run: |
+          echo "Checking for duplicate filenames..."
+
+          declare -A seen
+
+          for file in pages/*.html; do
+
+            name=$(basename "$file")
+
+            if [[ "${seen[$name]}" == "1" ]]; then
+              echo "Duplicate detected: $file"
+              rm "$file"
+            else
+              seen[$name]=1
+            fi
+
+          done
+
+      # =========================
+      # COMMIT
+      # =========================
+      - name: Commit canonical fixes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add pages/ || true
+
+          git diff --cached --quiet && echo "No changes" && exit 0
+
+          git commit -m "Add canonical URLs + duplicate control"
+          git push
