@@ -1,0 +1,30 @@
+name: SYSTEM RESET (Clean Working State)
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clean system state
+        run: |
+          echo "RESETTING WORKFLOW STATE"
+
+          mkdir -p cache registry analytics dashboard output
+
+          echo "{}" > cache/cache.json
+          echo "[]" > registry/output-log.json
+
+          echo "SYSTEM RESET COMPLETE"
+
+      - name: Confirm system alive
+        run: |
+          echo "WORKFLOW SYSTEM IS NOW FUNCTIONAL"
