@@ -1,0 +1,21 @@
+name: Entry Engine (Working Base)
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: System alive check
+        run: |
+          echo "SYSTEM IS RUNNING"
+          mkdir -p output
+          echo "OK" > output/status.txt
