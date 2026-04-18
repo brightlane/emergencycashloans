@@ -1,0 +1,79 @@
+name: Deduplication Engine (High Throughput)
+
+on:
+  workflow_run:
+    workflows: ["Batch Merge Engine (High Throughput)"]
+    types:
+      - completed
+
+jobs:
+  dedupe:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull latest
+        run: |
+          git pull origin main --rebase
+
+      - name: Run deduplication script
+        run: |
+          mkdir -p cleaned
+
+          python3 - << 'EOF'
+import os
+import hashlib
+import json
+
+seen = set()
+
+os.makedirs("cleaned", exist_ok=True)
+
+def hash_file(content):
+    return hashlib.md5(content.encode()).hexdigest()
+
+for root, dirs, files in os.walk("."):
+    for file in files:
+        if file.endswith(".json") or file.endswith(".txt"):
+            path = os.path.join(root, file)
+
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                h = hash_file(content)
+
+                if h not in seen:
+                    seen.add(h)
+                    out_path = os.path.join("cleaned", file)
+
+                    with open(out_path, "w", encoding="utf-8") as out:
+                        out.write(content)
+
+            except:
+                pass
+EOF
+
+      - name: Replace duplicates with cleaned output
+        run: |
+          cp -r cleaned/* . 2>/dev/null || true
+
+      - name: Commit deduplicated output
+        run: |
+          git add .
+
+          git commit -m "Deduplication pass (engine cleanup)" || echo "No changes"
+
+          git push origin main
