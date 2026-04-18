@@ -1,54 +1,15 @@
-name: Social Media Feeder (Stable)
+name: Social Feed Test
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-
-permissions:
-  contents: write
 
 jobs:
-  social:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create social folder safely
-        run: mkdir -p social
-
-      - name: Generate social posts
-        run: |
-          cat > social/posts.txt << 'EOF'
-🚀 New update on Emergency Cash Loans
-Explore guides on fast funding options.
-
-👉 https://example.com/pages/emergency/
-
-#finance #loans #cash
-
----
-
-💰 Payday loan insights updated
-Learn approval tips and funding speed.
-
-👉 https://example.com/pages/payday/
-
-#payday #money #loans
-
----
-
-⚡ Cash advance explained simply
-Fast funding breakdown.
-
-👉 https://example.com/pages/advance/
-
-#cashadvance #finance
-EOF
-
-      - name: Show output
-        run: |
-          echo "=== SOCIAL POSTS GENERATED ==="
-          cat social/posts.txt
+      - name: Print status
+        run: echo "SOCIAL FEEDER WORKFLOW IS RUNNING SUCCESSFULLY"
