@@ -1,84 +1,41 @@
-name: SEO Enhancer (Meta + Structured Data)
+echo "=== EXPANDING PAGES SAFELY ==="
 
-permissions:
-  contents: write
+for file in pages/*.html; do
+  if [ -f "$file" ]; then
 
-on:
-  workflow_dispatch:
-  push:
-    branches: [main]
+    echo "Processing: $file"
 
-jobs:
-  enhance:
-    runs-on: ubuntu-latest
+    # create temp file safely
+    tmpfile="${file}.tmp"
 
-    steps:
+    awk '
+      BEGIN { injected=0 }
 
-      # =========================
-      # CHECKOUT
-      # =========================
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      {
+        print $0
 
-      # =========================
-      # VERIFY PAGES EXIST
-      # =========================
-      - name: Check pages folder
-        run: |
-          if [ ! -d pages ]; then
-            echo "No pages folder - skipping"
-            exit 0
-          fi
+        # inject before closing body tag (safe HTML injection)
+        if ($0 ~ /<\/body>/ && injected == 0) {
 
-      # =========================
-      # INJECT SEO META + JSON-LD
-      # =========================
-      - name: Enhance SEO on pages
-        run: |
-          BASE_URL="https://brightlane.github.io/emergencycashloans"
+          print "<hr>"
+          print "<div class=\"seo-internal-links\">"
+          print "<h3>Related Financial Guides</h3>"
+          print "<ul>"
+          print "<li><a href=\"/emergencycashloans/\">Home Hub</a></li>"
+          print "<li><a href=\"/pages/cash-advance-guide.html\">Cash Advance Guide</a></li>"
+          print "<li><a href=\"/pages/payday-loans-explained.html\">Payday Loans Explained</a></li>"
+          print "<li><a href=\"/pages/installment-loans-guide.html\">Installment Loans Guide</a></li>"
+          print "</ul>"
+          print "</div>"
 
-          for file in pages/*.html; do
+          injected=1
+        }
+      }
+    ' "$file" > "$tmpfile"
 
-            if [ -f "$file" ]; then
+    mv "$tmpfile" "$file"
 
-              filename=$(basename "$file")
+  fi
+done
 
-              # skip index
-              if [ "$filename" = "index.html" ]; then
-                continue
-              fi
-
-              # derive keyword from filename
-              keyword=$(echo "$filename" | sed 's/-/ /g' | sed 's/.html//g')
-
-              # inject meta tags after <head>
-              sed -i "/<head>/a \
-<meta name=\"description\" content=\"Information about $keyword\">\n\
-<link rel=\"canonical\" href=\"$BASE_URL/pages/$filename\">\n\
-<script type=\"application/ld+json\">\n\
-{\n\
-  \"@context\": \"https://schema.org\",\n\
-  \"@type\": \"WebPage\",\n\
-  \"name\": \"$keyword\",\n\
-  \"url\": \"$BASE_URL/pages/$filename\"\n\
-}\n\
-</script>" "$file"
-
-            fi
-
-          done
-
-      # =========================
-      # COMMIT CHANGES SAFELY
-      # =========================
-      - name: Commit SEO improvements
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-
-          git add pages/ || true
-
-          git diff --cached --quiet && echo "No changes" && exit 0
-
-          git commit -m "Add SEO metadata + structured data"
-          git push
+echo "=== EXPANSION COMPLETE ==="
