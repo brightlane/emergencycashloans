@@ -1,15 +1,88 @@
-name: Content Network Feeder Test
+name: Content Network Feeder
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
-  test:
+  network:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Print status
-        run: echo "CONTENT NETWORK FEEDER IS RUNNING SUCCESSFULLY"
+      - name: Create network directory
+        run: mkdir -p network
+
+      - name: Build content network map
+        run: |
+          echo "Generating content network..."
+
+          # Start JSON file
+          echo "{" > network/feed.json
+          echo '  "pages": [' >> network/feed.json
+
+          first=true
+
+          # Safe loop (only if folder exists)
+          if [ -d "pages" ]; then
+            for file in pages/*.html; do
+              [ -f "$file" ] || continue
+
+              title=$(grep -m1 "<title>" "$file" 2>/dev/null | sed 's/<[^>]*>//g' || echo "Untitled Page")
+
+              # clean filename for URL
+              url=$(echo "$file" | sed 's/pages\///')
+
+              if [ "$first" = true ]; then
+                first=false
+              else
+                echo "," >> network/feed.json
+              fi
+
+              echo "    {" >> network/feed.json
+              echo "      \"file\": \"$url\"," >> network/feed.json
+              echo "      \"title\": \"$title\"" >> network/feed.json
+              echo -n "    }" >> network/feed.json
+            done
+          fi
+
+          echo "" >> network/feed.json
+          echo "  ]" >> network/feed.json
+          echo "}" >> network/feed.json
+
+      - name: Create internal link summary
+        run: |
+          echo "Generating internal link structure..."
+
+          mkdir -p network
+
+          {
+            echo "CONTENT NETWORK SUMMARY"
+            echo "======================="
+            echo ""
+            echo "Pages discovered:"
+          } > network/summary.txt
+
+          if [ -d "pages" ]; then
+            for file in pages/*.html; do
+              [ -f "$file" ] || continue
+              echo "- $file" >> network/summary.txt
+            done
+          else
+            echo "No pages folder found" >> network/summary.txt
+          fi
+
+      - name: Show output
+        run: |
+          echo "=== NETWORK FEED ==="
+          cat network/feed.json || true
+
+          echo ""
+          echo "=== SUMMARY ==="
+          cat network/summary.txt || true
