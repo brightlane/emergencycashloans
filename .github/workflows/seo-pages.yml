@@ -1,0 +1,73 @@
+name: Smart SEO Page Generator
+
+permissions:
+  contents: write
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SEO Pages (filtered)
+        run: |
+          mkdir -p pages
+
+          while read keyword; do
+            score=0
+
+            if [[ "$keyword" == *"instant"* ]]; then score=$((score+3)); fi
+            if [[ "$keyword" == *"apply"* ]]; then score=$((score+3)); fi
+            if [[ "$keyword" == *"emergency"* ]]; then score=$((score+3)); fi
+            if [[ "$keyword" == *"loan"* ]]; then score=$((score+2)); fi
+            if [[ "$keyword" == *"cash"* ]]; then score=$((score+2)); fi
+            if [[ "$keyword" == *"no credit check"* ]]; then score=$((score+3)); fi
+            if [[ "$keyword" == *"bad credit"* ]]; then score=$((score+2)); fi
+
+            # ONLY generate strong pages
+            if [ $score -ge 6 ]; then
+
+              slug=$(echo "$keyword" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+
+              cat > pages/$slug.html <<EOF
+<!DOCTYPE html>
+<html>
+<head>
+  <title>$keyword | Emergency Cash Loans</title>
+  <meta name="description" content="Information about $keyword">
+  <meta name="robots" content="index, follow">
+</head>
+
+<body>
+
+<h1>$keyword</h1>
+
+<p>
+This page covers $keyword including eligibility, fast approval options, and emergency funding solutions.
+</p>
+
+<h3>Related pages</h3>
+<ul>
+  <li><a href="/emergencycashloans/">Home</a></li>
+</ul>
+
+</body>
+</html>
+EOF
+
+            fi
+
+          done < keywords.txt
+
+      - name: Commit pages
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add pages/
+          git commit -m "Smart SEO page generation" || exit 0
+          git push
