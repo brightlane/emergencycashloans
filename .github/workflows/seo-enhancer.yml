@@ -1,34 +1,56 @@
-echo "SAFE PAGE EXPAND START"
+name: SEO Enhancer (Safe Mode)
 
-for file in pages/*.html; do
-  [ -f "$file" ] || continue
+permissions:
+  contents: write
 
-  tmp="${file}.tmp"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
 
-  awk '
-    BEGIN { done=0 }
+jobs:
+  safe-enhance:
+    runs-on: ubuntu-latest
 
-    {
-      print $0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      if ($0 ~ /<\/body>/ && done == 0) {
+      - name: Verify pages folder
+        run: |
+          if [ ! -d "pages" ]; then
+            echo "No pages folder found"
+            exit 0
+          fi
 
-        print "<hr>"
-        print "<div class=\"internal-links\">"
-        print "<ul>"
-        print "<li><a href=\"/emergencycashloans/\">Home</a></li>"
-        print "<li><a href=\"/pages/cash-advance-guide.html\">Cash Advance</a></li>"
-        print "<li><a href=\"/pages/payday-loans-explained.html\">Payday Loans</a></li>"
-        print "<li><a href=\"/pages/installment-loans-guide.html\">Installment Loans</a></li>"
-        print "</ul>"
-        print "</div>"
+      - name: Simple link injection (safe)
+        run: |
+          echo "Running safe SEO enhancer..."
 
-        done=1
-      }
-    }
-  ' "$file" > "$tmp"
+          for file in pages/*.html; do
+            [ -f "$file" ] || continue
 
-  mv "$tmp" "$file"
-done
+            echo "Processing $file"
 
-echo "SAFE PAGE EXPAND DONE"
+            tmp="${file}.tmp"
+
+            awk '
+              {
+                print $0
+                if ($0 ~ /<\/body>/) {
+                  print "<hr>"
+                  print "<p><a href=\"/emergencycashloans/\">Home</a></p>"
+                }
+              }
+            ' "$file" > "$tmp"
+
+            mv "$tmp" "$file"
+          done
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add pages/ || true
+          git commit -m "safe seo enhancement" || exit 0
+          git push || true
