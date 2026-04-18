@@ -1,0 +1,46 @@
+name: Keyword Expansion Engine
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Expand keywords
+        run: |
+          modifiers="fast;instant;urgent;same day;online;today;now"
+          intents="apply;get;approval;qualify;requirements"
+          credit="bad credit;no credit check;unemployed;low income"
+          use="rent;bills;medical;car repair;emergency"
+
+          output="keywords-expanded.txt"
+          > $output
+
+          while read base; do
+            for m in $(echo $modifiers | tr ';' ' '); do
+              for i in $(echo $intents | tr ';' ' '); do
+                for c in $(echo $credit | tr ';' ' '); do
+                  for u in $(echo $use | tr ';' ' '); do
+                    echo "$m $base $i $c $u" >> $output
+                  done
+                done
+              done
+            done
+          done < keywords.txt
+
+          sort $output | uniq > keywords-final.txt
+          mv keywords-final.txt keywords.txt
+
+      - name: Commit keywords
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add keywords.txt
+          git commit -m "Auto keyword expansion" || exit 0
+          git push
