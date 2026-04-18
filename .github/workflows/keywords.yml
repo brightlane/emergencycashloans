@@ -1,5 +1,8 @@
 name: Keyword Expansion Engine
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
   schedule:
@@ -16,8 +19,8 @@ jobs:
         run: |
           modifiers="fast;instant;urgent;same day;online;today;now"
           intents="apply;get;approval;qualify;requirements"
-          credit="bad credit;no credit check;unemployed;low income"
-          use="rent;bills;medical;car repair;emergency"
+          credit="bad credit;no credit check;unemployed;low income;self employed"
+          use="rent;bills;medical;car repair;emergency;food;utilities"
 
           output="keywords-expanded.txt"
           > $output
@@ -37,7 +40,7 @@ jobs:
           sort $output | uniq > keywords-final.txt
           mv keywords-final.txt keywords.txt
 
-      - name: Commit keywords
+      - name: Commit updated keywords
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
