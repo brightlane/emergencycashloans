@@ -1,39 +1,50 @@
-name: SEO Auto Builder
+name: Auto Keyword Expansion
 
 on:
-  push:
-    branches: [ main ]
+  schedule:
+    - cron: "0 0 * * 0"  # weekly expansion
+  workflow_dispatch:
 
 jobs:
-  build:
+  expand:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Inject SEO tags into HTML
+      - name: Expand keywords
         run: |
-          mkdir -p dist
+          base="keywords.txt"
+          output="keywords-expanded.txt"
 
-          cp -r ./* dist/
+          echo "" > $output
 
-          FILE="dist/index.html"
+          modifiers="fast;instant;emergency;same day;online;no credit check;quick"
+          intents="apply;requirements;eligibility;how to get;best;options"
 
-          sed -i 's|</head>|\
-<meta name="description" content="Emergency cash loans information and resources">\
-<meta name="robots" content="index, follow">\
-<meta property="og:title" content="Emergency Cash Loans">\
-<meta property="og:description" content="Fast access to emergency cash loan resources">\
-<meta property="og:url" content="https://brightlane.github.io/emergencycashloans/">\
-<meta property="og:type" content="website">\
-<meta name="twitter:card" content="summary">\
-</head>|' $FILE
+          while read keyword; do
+            for m in $(echo $modifiers | tr ';' ' '); do
+              echo "$m $keyword" >> $output
+            done
 
-      - name: Commit processed site
+            for i in $(echo $intents | tr ';' ' '); do
+              echo "$keyword $i" >> $output
+            done
+
+          done < $base
+
+      - name: Deduplicate
+        run: |
+          sort keywords-expanded.txt | uniq > keywords-final.txt
+
+      - name: Replace keyword file
+        run: |
+          mv keywords-final.txt keywords.txt
+
+      - name: Commit updates
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          cp -r dist/* .
-          git add .
-          git commit -m "Auto SEO build" || exit 0
+          git add keywords.txt
+          git commit -m "Auto keyword expansion" || exit 0
           git push
