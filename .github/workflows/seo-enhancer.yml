@@ -1,12 +1,17 @@
-echo "=== EXPANDING PAGES SAFELY ==="
+echo "=== SAFE HTML PAGE EXPAND (STABLE VERSION) ==="
+
+# safety check
+if [ ! -d "pages" ]; then
+  echo "pages folder not found - exiting safely"
+  exit 0
+fi
 
 for file in pages/*.html; do
   if [ -f "$file" ]; then
 
     echo "Processing: $file"
 
-    # create temp file safely
-    tmpfile="${file}.tmp"
+    tmp="${file}.tmp"
 
     awk '
       BEGIN { injected=0 }
@@ -14,28 +19,31 @@ for file in pages/*.html; do
       {
         print $0
 
-        # inject before closing body tag (safe HTML injection)
+        # inject BEFORE </body>
         if ($0 ~ /<\/body>/ && injected == 0) {
 
+          print ""
           print "<hr>"
           print "<div class=\"seo-internal-links\">"
-          print "<h3>Related Financial Guides</h3>"
+          print "<h3>Related Guides</h3>"
           print "<ul>"
-          print "<li><a href=\"/emergencycashloans/\">Home Hub</a></li>"
+          print "<li><a href=\"/emergencycashloans/\">🏠 Home Hub</a></li>"
           print "<li><a href=\"/pages/cash-advance-guide.html\">Cash Advance Guide</a></li>"
           print "<li><a href=\"/pages/payday-loans-explained.html\">Payday Loans Explained</a></li>"
           print "<li><a href=\"/pages/installment-loans-guide.html\">Installment Loans Guide</a></li>"
+          print "<li><a href=\"/pages/emergency-cash-options.html\">Emergency Cash Options</a></li>"
           print "</ul>"
           print "</div>"
+          print ""
 
           injected=1
         }
       }
-    ' "$file" > "$tmpfile"
+    ' "$file" > "$tmp"
 
-    mv "$tmpfile" "$file"
+    mv "$tmp" "$file"
 
   fi
 done
 
-echo "=== EXPANSION COMPLETE ==="
+echo "=== PAGE EXPANSION COMPLETE ==="
