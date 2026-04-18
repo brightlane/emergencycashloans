@@ -1,12 +1,9 @@
-name: Robots TXT Feeder
+name: Robots TXT Feeder (Safe Mode)
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-
-permissions:
-  contents: write
 
 jobs:
   robots:
@@ -18,6 +15,8 @@ jobs:
 
       - name: Generate robots.txt
         run: |
+          mkdir -p network
+
           cat > robots.txt << 'EOF'
 User-agent: *
 Allow: /
@@ -29,23 +28,10 @@ Disallow: /network/
 Sitemap: https://YOURDOMAIN.com/sitemap.xml
 EOF
 
-      - name: Move to network folder
+      - name: Save network copy
+        run: cp robots.txt network/robots.txt
+
+      - name: Show output
         run: |
-          mkdir -p network
-          cp robots.txt network/robots.txt
-
-      - name: Commit robots.txt changes
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-
-          git add robots.txt network/robots.txt
-
-          git commit -m "Update robots.txt (auto feeder)" || echo "No changes to commit"
-
-          git push || echo "Nothing to push"
-
-      - name: Show result
-        run: |
-          echo "=== ROBOTS.TXT ==="
+          echo "=== robots.txt ==="
           cat robots.txt
