@@ -1,0 +1,46 @@
+name: Robots TXT Feeder
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  robots:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Create robots.txt
+        run: |
+          echo "Generating robots.txt..."
+
+          mkdir -p network
+
+          cat > robots.txt << 'EOF'
+User-agent: *
+Allow: /
+
+# Block sensitive or internal folders
+Disallow: /node_modules/
+Disallow: /.github/
+Disallow: /network/
+
+# Sitemap location
+Sitemap: https://YOURDOMAIN.com/sitemap.xml
+EOF
+
+      - name: Copy robots to network folder
+        run: |
+          mkdir -p network
+          cp robots.txt network/robots.txt
+
+      - name: Show output
+        run: |
+          echo "=== ROBOTS.TXT ==="
+          cat robots.txt
