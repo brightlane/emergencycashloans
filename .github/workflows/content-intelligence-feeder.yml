@@ -1,0 +1,157 @@
+name: Content Intelligence Master Feeder (Stable)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  feeder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Create output structure
+        run: mkdir -p feed
+
+      # =========================
+      # SAFE SITE BASE
+      # =========================
+      - name: Define safe base URL
+        run: echo "BASE_URL=https://yourdomain.com" > feed/config.txt
+
+      # =========================
+      # RSS FEED
+      # =========================
+      - name: RSS Feed Generator
+        run: |
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > feed/rss.xml
+          echo '<rss><channel>' >> feed/rss.xml
+          echo '<title>Content Feed</title>' >> feed/rss.xml
+          echo '<link>https://yourdomain.com</link>' >> feed/rss.xml
+          echo '<description>Unified content feed</description>' >> feed/rss.xml
+          echo '</channel></rss>' >> feed/rss.xml
+
+      # =========================
+      # INDEXNOW
+      # =========================
+      - name: IndexNow Feed
+        run: |
+          echo "[" > feed/indexnow.json
+          echo "\"https://yourdomain.com\"" >> feed/indexnow.json
+          echo "]" >> feed/indexnow.json
+
+      # =========================
+      # SOCIAL FEED
+      # =========================
+      - name: Social Feeder
+        run: |
+          mkdir -p feed/social
+
+          echo "LinkedIn: Financial guide updates available https://yourdomain.com" > feed/social/linkedin.txt
+          echo "X: Cash solutions guide https://yourdomain.com #finance" > feed/social/x.txt
+          echo "Reddit: New financial resource published https://yourdomain.com" > feed/social/reddit.txt
+          echo "Bluesky: Update available https://yourdomain.com" > feed/social/bluesky.txt
+
+      # =========================
+      # INTERNAL LINKS
+      # =========================
+      - name: Internal Link Feeder
+        run: |
+          echo "https://yourdomain.com -> homepage hub" > feed/internal-links.txt
+
+      # =========================
+      # SCHEMA FEEDER
+      # =========================
+      - name: Schema Feeder
+        run: |
+          mkdir -p feed/schema
+          echo '{ "type": "Article", "status": "stable", "schema": "FAQPage" }' > feed/schema/schema.json
+
+      # =========================
+      # SERP FEEDER
+      # =========================
+      - name: SERP Snippet Feeder
+        run: |
+          mkdir -p feed/serp
+          echo "Title: Fast Cash & Loan Guide | Updated financial insights" > feed/serp/meta.txt
+
+      # =========================
+      # CONTENT REFRESH
+      # =========================
+      - name: Refresh Queue
+        run: |
+          echo "content-refresh-queue" > feed/refresh.txt
+          echo "homepage" >> feed/refresh.txt
+
+      # =========================
+      # ENTITY FEEDER
+      # =========================
+      - name: Entity Expansion Feed
+        run: |
+          mkdir -p feed/entities
+          echo "loan -> cash advance -> payday -> installment -> credit" > feed/entities/entity-map.txt
+
+      # =========================
+      # FAQ FEEDER
+      # =========================
+      - name: FAQ Generator
+        run: |
+          mkdir -p feed/faq
+          echo "Q: How to get a cash advance? A: Apply via lender or bank app." > feed/faq/faqs.txt
+
+      # =========================
+      # LOCATION FEEDER (SAFE)
+      # =========================
+      - name: Location Feeder
+        run: |
+          mkdir -p feed/locations
+          echo "cash loans in US cities -> template pages" > feed/locations/locations.txt
+
+      # =========================
+      # COMPARISON FEEDER
+      # =========================
+      - name: Comparison Feeder
+        run: |
+          mkdir -p feed/comparisons
+          echo "payday loan vs installment loan" > feed/comparisons/comparisons.txt
+
+      # =========================
+      # KEYWORD GAP FEEDER
+      # =========================
+      - name: Keyword Gap Feeder
+        run: |
+          mkdir -p feed/keywords
+          echo "emergency cash, no credit loan, fast approval loan" > feed/keywords/gaps.txt
+
+      # =========================
+      # TOPIC AUTHORITY FEEDER
+      # =========================
+      - name: Topic Authority Map
+        run: |
+          mkdir -p feed/authority
+          echo "core: loans -> sub: payday, installment, cash advance" > feed/authority/map.txt
+
+      # =========================
+      # CTR VARIANT FEEDER
+      # =========================
+      - name: CTR Title Variants
+        run: |
+          mkdir -p feed/ctr
+          echo "Fast Cash Loans | Emergency Funding Guide | No Credit Check Options" > feed/ctr/titles.txt
+
+      # =========================
+      # OUTPUT SUMMARY
+      # =========================
+      - name: Show Output
+        run: |
+          echo "=== RSS ==="
+          cat feed/rss.xml
+
+          echo "=== SOCIAL ==="
+          ls feed/social
+
+          echo "=== AUTHORITY ==="
+          cat feed/authority/map.txt
