@@ -1,0 +1,36 @@
+name: Daily SEO Articles
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # once per day
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run article generator
+        run: node article-batch-generator.js
+
+      - name: Commit articles
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add pages/
+
+          git diff --cached --quiet && echo "No changes" && exit 0
+
+          git commit -m "Daily SEO article batch"
+          git push
