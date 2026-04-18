@@ -1,0 +1,95 @@
+name: Output Registry (System Memory Layer)
+
+on:
+  workflow_run:
+    workflows:
+      - "Orchestrator Guard (System Safety Layer)"
+    types:
+      - completed
+
+  workflow_dispatch:
+
+jobs:
+  registry:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull latest state
+        run: |
+          git pull origin main --rebase
+
+      - name: Initialize registry system
+        run: |
+          mkdir -p registry
+
+          if [ ! -f registry/output-log.json ]; then
+            echo "[]" > registry/output-log.json
+          fi
+
+      - name: Build registry entries
+        run: |
+          python3 - << 'EOF'
+import os
+import json
+import hashlib
+from datetime import datetime
+
+REGISTRY_FILE = "registry/output-log.json"
+
+with open(REGISTRY_FILE, "r") as f:
+    data = json.load(f)
+
+def hash_content(content):
+    return hashlib.md5(content.encode()).hexdigest()
+
+new_entries = []
+
+for root, dirs, files in os.walk("."):
+    for file in files:
+        if file.endswith(".json") or file.endswith(".txt"):
+            path = os.path.join(root, file)
+
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                entry = {
+                    "file": path,
+                    "hash": hash_content(content),
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "size": len(content)
+                }
+
+                # avoid duplicates in registry
+                if not any(e["hash"] == entry["hash"] for e in data):
+                    new_entries.append(entry)
+
+            except:
+                pass
+
+data.extend(new_entries)
+
+with open(REGISTRY_FILE, "w") as f:
+    json.dump(data, f, indent=2)
+EOF
+
+      - name: Commit registry updates
+        run: |
+          git add registry/
+
+          git commit -m "Update output registry (system memory layer)" || echo "No changes"
+
+          git push origin main
