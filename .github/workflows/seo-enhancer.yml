@@ -1,3 +1,5 @@
+echo "EXPANDING PAGES SAFELY (NO SED)"
+
 for file in pages/*.html; do
   [ -f "$file" ] || continue
 
@@ -10,10 +12,15 @@ for file in pages/*.html; do
       print $0
 
       if ($0 ~ /<\/body>/ && done == 0) {
-        print "<div class=\"internal-links\">"
-        print "<a href=\"/emergencycashloans/\">Home</a>"
-        print "<a href=\"/pages/cash-advance-guide.html\">Cash Advance</a>"
-        print "<a href=\"/pages/payday-loans-explained.html\">Payday Loans</a>"
+
+        print "<hr>"
+        print "<div class=\"seo-links\">"
+        print "<ul>"
+        print "<li><a href=\"/emergencycashloans/\">Home</a></li>"
+        print "<li><a href=\"/pages/cash-advance-guide.html\">Cash Advance Guide</a></li>"
+        print "<li><a href=\"/pages/payday-loans-explained.html\">Payday Loans</a></li>"
+        print "<li><a href=\"/pages/installment-loans-guide.html\">Installment Loans</a></li>"
+        print "</ul>"
         print "</div>"
 
         done=1
