@@ -1,0 +1,90 @@
+name: SEO Content Expansion Engine
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # =========================
+      # CHECKOUT
+      # =========================
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # =========================
+      # VERIFY PAGES EXIST
+      # =========================
+      - name: Check pages
+        run: |
+          if [ ! -d pages ]; then
+            echo "No pages folder - skipping"
+            exit 0
+          fi
+
+      # =========================
+      # ADD UNIQUE CONTENT BLOCKS
+      # =========================
+      - name: Expand page content
+        run: |
+          for file in pages/*.html; do
+
+            if [ -f "$file" ]; then
+
+              keyword=$(basename "$file" .html | tr '-' ' ')
+
+              # dynamic content block (varies per page)
+              extra="
+              <div class='seo-content'>
+                <h2>Understanding $keyword</h2>
+                <p>
+                  $keyword may vary depending on lender requirements, credit profile,
+                  income verification, and urgency of funds. Approval times and availability
+                  differ by provider and region.
+                </p>
+
+                <h2>Key Factors</h2>
+                <ul>
+                  <li>Application speed</li>
+                  <li>Credit requirements</li>
+                  <li>Income verification</li>
+                  <li>Repayment terms</li>
+                </ul>
+
+                <h2>Important Considerations</h2>
+                <p>
+                  Always compare multiple options before choosing $keyword services.
+                  Terms and conditions may vary significantly.
+                </p>
+              </div>
+              "
+
+              # inject before closing body tag
+              sed -i "s|</body>|$extra\n</body>|" "$file"
+
+            fi
+
+          done
+
+      # =========================
+      # COMMIT CHANGES SAFELY
+      # =========================
+      - name: Commit expanded content
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add pages/ || true
+
+          git diff --cached --quiet && echo "No changes" && exit 0
+
+          git commit -m "Add SEO content expansion layer"
+          git push
