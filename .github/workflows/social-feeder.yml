@@ -1,4 +1,4 @@
-name: Social Media Feeder
+name: Social Media Feeder (Stable)
 
 on:
   workflow_dispatch:
@@ -16,40 +16,39 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Create social folder safely
+        run: mkdir -p social
+
       - name: Generate social posts
         run: |
-          mkdir -p social
-
-          echo "Generating social media feed..."
-
           cat > social/posts.txt << 'EOF'
-🚀 New financial guide available:
-Check out our latest insights on emergency cash loans.
+🚀 New update on Emergency Cash Loans
+Explore guides on fast funding options.
 
-👉 https://yourdomain.com/pages/emergency/
+👉 https://example.com/pages/emergency/
 
-#finance #loans #cashadvance
-
----
-
-💰 Need fast funding?
-Learn about payday loan options and approval tips.
-
-👉 https://yourdomain.com/pages/payday/
-
-#paydayloans #moneytips #finance
+#finance #loans #cash
 
 ---
 
-⚡ Cash advance explained simply.
-See how quick funding works.
+💰 Payday loan insights updated
+Learn approval tips and funding speed.
 
-👉 https://yourdomain.com/pages/advance/
+👉 https://example.com/pages/payday/
 
-#cashadvance #fastcash
+#payday #money #loans
+
+---
+
+⚡ Cash advance explained simply
+Fast funding breakdown.
+
+👉 https://example.com/pages/advance/
+
+#cashadvance #finance
 EOF
 
-      - name: Show generated posts
+      - name: Show output
         run: |
-          echo "=== SOCIAL POSTS ==="
+          echo "=== SOCIAL POSTS GENERATED ==="
           cat social/posts.txt
