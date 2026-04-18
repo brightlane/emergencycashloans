@@ -1,19 +1,43 @@
-- name: Expand SEO links safely
-  run: |
-    echo "Starting safe expansion..."
+name: Content Expander (Safe Mode)
 
-    mkdir -p pages
+permissions:
+  contents: write
 
-    for file in pages/*.html; do
-      [ -f "$file" ] || continue
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
 
-      echo "Processing $file"
+jobs:
+  expand:
+    runs-on: ubuntu-latest
 
-      # SAFE replacement (NO broken sed)
-      sed -i 's|EMERGENCY_KEYWORD|emergency cash loans|g' "$file"
-      sed -i 's|PAYDAY_KEYWORD|payday loans|g' "$file"
-      sed -i 's|CASH_ADVANCE_KEYWORD|cash advance loans|g' "$file"
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    done
+      - name: Check pages folder
+        run: |
+          echo "Checking pages..."
+          ls -la pages || echo "No pages folder"
 
-    echo "Expansion complete"
+      - name: Safe expansion (NO SED)
+        run: |
+          echo "Starting safe expansion..."
+
+          for file in pages/*.html; do
+            [ -f "$file" ] || continue
+
+            echo "Processing $file"
+
+            # SAFE replacement using awk (no sed crashes)
+            awk '
+              { gsub("EMERGENCY","emergency cash loans"); }
+              { gsub("PAYDAY","payday loans"); }
+              { gsub("CASHADV","cash advance loans"); }
+              1
+            ' "$file" > tmp && mv tmp "$file"
+
+          done
+
+          echo "Expansion complete"
