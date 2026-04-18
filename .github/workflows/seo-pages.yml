@@ -4,89 +4,30 @@ permissions:
   contents: write
 
 on:
-  push:
   workflow_dispatch:
+  push:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Generate SEO Pages with Smart Clusters
+      - name: Generate SEO Pages
         shell: bash
         run: |
           set -e
 
-          mkdir -p pages
-
-          # =========================
-          # CLUSTER PATTERN SYSTEM
-          # =========================
-
-          emergency_patterns=(
-            "emergency cash" "emergency loan" "urgent cash" "money emergency"
-            "cash emergency" "financial emergency" "emergency funds"
-            "emergency help" "urgent money" "cash urgently"
-            "emergency funding" "emergency assistance"
-          )
-
-          payday_patterns=(
-            "payday loan" "fast payday" "payday advance" "paycheck advance"
-            "early paycheck" "wage advance" "salary advance"
-            "pay advance" "cash before payday"
-          )
-
-          nocredit_patterns=(
-            "no credit" "no credit check" "bad credit" "poor credit"
-            "credit free" "credit not required" "no credit needed"
-            "no credit history"
-          )
-
-          advance_patterns=(
-            "cash advance" "instant cash" "money advance" "quick advance"
-            "instant advance" "fast advance" "direct advance"
-            "advance cash" "instant money"
-          )
-
-          general_patterns=(
-            "loan" "cash loan" "personal loan" "quick loan"
-            "online loan" "fast loan" "instant loan"
-          )
-
-          match_cluster() {
-            local keyword="$1"
-
-            for p in "${emergency_patterns[@]}"; do
-              [[ "$keyword" == *"$p"* ]] && echo "emergency" && return
-            done
-
-            for p in "${payday_patterns[@]}"; do
-              [[ "$keyword" == *"$p"* ]] && echo "payday" && return
-            done
-
-            for p in "${nocredit_patterns[@]}"; do
-              [[ "$keyword" == *"$p"* ]] && echo "nocredit" && return
-            done
-
-            for p in "${advance_patterns[@]}"; do
-              [[ "$keyword" == *"$p"* ]] && echo "advance" && return
-            done
-
-            for p in "${general_patterns[@]}"; do
-              [[ "$keyword" == *"$p"* ]] && echo "general" && return
-            done
-
-            echo "general"
-          }
-
-          # =========================
-          # PAGE GENERATION
-          # =========================
+          mkdir -p pages/emergency
+          mkdir -p pages/payday
+          mkdir -p pages/nocredit
+          mkdir -p pages/advance
+          mkdir -p pages/general
 
           if [ ! -f keywords.txt ]; then
-            echo "keywords.txt not found"
+            echo "keywords.txt missing"
             exit 0
           fi
 
@@ -94,34 +35,36 @@ jobs:
 
             [ -z "$keyword" ] && continue
 
-            cluster=$(match_cluster "$keyword")
+            cluster="general"
+
+            if [[ "$keyword" == *"emergency"* ]]; then cluster="emergency"; fi
+            if [[ "$keyword" == *"payday"* ]]; then cluster="payday"; fi
+            if [[ "$keyword" == *"no credit"* ]]; then cluster="nocredit"; fi
+            if [[ "$keyword" == *"cash advance"* ]]; then cluster="advance"; fi
 
             slug=$(echo "$keyword" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
-            mkdir -p "pages/$cluster"
+            FILE="pages/$cluster/$slug.html"
 
-            cat > "pages/$cluster/$slug.html" <<EOF
+            cat > "$FILE" <<EOF
 <!DOCTYPE html>
 <html>
 <head>
   <title>$keyword | Emergency Cash Loans</title>
-  <meta name="description" content="Information about $keyword">
+  <meta name="description" content="$keyword information and options">
   <meta name="robots" content="index, follow">
 </head>
-
 <body>
 
 <h1>$keyword</h1>
 
 <p>
-This page belongs to the <strong>$cluster</strong> topic cluster.
-It covers $keyword options including eligibility, approval speed, and funding methods.
+This page is about $keyword and belongs to the $cluster topic cluster.
 </p>
 
-<h3>Related pages</h3>
 <ul>
   <li><a href="/emergencycashloans/">Home</a></li>
-  <li><a href="/pages/$cluster/">More in this category</a></li>
+  <li><a href="/pages/$cluster/">More in $cluster</a></li>
 </ul>
 
 </body>
@@ -130,10 +73,10 @@ EOF
 
           done < keywords.txt
 
-      - name: Commit pages
+      - name: Commit changes
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
           git add pages/
-          git commit -m "Smart SEO cluster generation" || exit 0
+          git commit -m "Generate SEO pages" || exit 0
           git push
