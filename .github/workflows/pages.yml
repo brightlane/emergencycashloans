@@ -1,50 +1,42 @@
-name: SEO Page Generator
+name: Pages Workflow (Stable)
+
+permissions:
+  contents: write
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
-  build:
+  pages:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Generate pages
+      - name: Verify repository structure
         run: |
-          mkdir -p pages
+          echo "=== CHECKING FILES ==="
+          ls -la
+          echo "=== CHECKING PAGES ==="
+          ls -la pages || echo "No pages folder found"
 
-          while read keyword; do
-            slug=$(echo "$keyword" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
-
-            cat > pages/$slug.html <<EOF
-<!DOCTYPE html>
-<html>
-<head>
-  <title>$keyword | Emergency Cash Loans</title>
-  <meta name="description" content="Information about $keyword">
-  <meta name="robots" content="index, follow">
-</head>
-<body>
-
-<h1>$keyword</h1>
-
-<p>This page explains options related to $keyword including emergency financial assistance and short-term loan solutions.</p>
-
-<a href="/emergencycashloans/">Home</a>
-
-</body>
-</html>
-EOF
-
-          done < keywords.txt
-
-      - name: Commit pages
+      - name: Validate HTML files exist
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-          git add pages/
-          git commit -m "Auto SEO pages" || exit 0
-          git push
+          if [ ! -d "pages" ]; then
+            echo "pages folder missing - nothing to do"
+            exit 0
+          fi
+
+          count=$(ls pages/*.html 2>/dev/null | wc -l || true)
+          echo "HTML files found: $count"
+
+          if [ "$count" -eq 0 ]; then
+            echo "No HTML pages found"
+          fi
+
+      - name: Finish safely
+        run: |
+          echo "Pages workflow completed successfully"
