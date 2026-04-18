@@ -1,0 +1,37 @@
+{
+  "seo-enhancer": {
+    "enabled": true,
+    "priority": 1,
+    "throttle_seconds": 0
+  },
+  "keyword-expansion": {
+    "enabled": true,
+    "priority": 2,
+    "throttle_seconds": 0
+  },
+  "content-expander": {
+    "enabled": true,
+    "priority": 3,
+    "throttle_seconds": 0
+  },
+  "authority-system": {
+    "enabled": true,
+    "priority": 4,
+    "throttle_seconds": 0
+  },
+  "indexing": {
+    "enabled": true,
+    "priority": 5,
+    "throttle_seconds": 0
+  },
+  "sitemap": {
+    "enabled": true,
+    "priority": 6,
+    "throttle_seconds": 0
+  },
+  "social-feeder": {
+    "enabled": true,
+    "priority": 7,
+    "throttle_seconds": 0
+  }
+}
