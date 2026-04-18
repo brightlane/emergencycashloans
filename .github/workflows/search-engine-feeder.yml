@@ -1,0 +1,95 @@
+name: Search Engine Feeder
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  feeder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Create search folder
+        run: mkdir -p network
+
+      - name: Build search engine feed map
+        run: |
+          echo "Generating search engine feed..."
+
+          echo "{" > network/search-feed.json
+          echo '  "pages": [' >> network/search-feed.json
+
+          first=true
+
+          if [ -d "pages" ]; then
+            for file in pages/*.html; do
+              [ -f "$file" ] || continue
+
+              title=$(grep -m1 "<title>" "$file" 2>/dev/null | sed 's/<[^>]*>//g' || echo "Untitled Page")
+              url=$(echo "$file" | sed 's/pages\///')
+
+              if [ "$first" = true ]; then
+                first=false
+              else
+                echo "," >> network/search-feed.json
+              fi
+
+              echo "    {" >> network/search-feed.json
+              echo "      \"file\": \"$url\"," >> network/search-feed.json
+              echo "      \"title\": \"$title\"" >> network/search-feed.json
+              echo -n "    }" >> network/search-feed.json
+            done
+          fi
+
+          echo "" >> network/search-feed.json
+          echo "  ]" >> network/search-feed.json
+          echo "}" >> network/search-feed.json
+
+      - name: Ping search engines (safe mode)
+        run: |
+          echo "Pinging Google..."
+          curl "https://www.google.com/ping?sitemap=https://YOURDOMAIN.com/sitemap.xml" || true
+
+          echo "Pinging Bing..."
+          curl "https://www.bing.com/ping?sitemap=https://YOURDOMAIN.com/sitemap.xml" || true
+
+          echo "Yahoo/AOL rely on Bing index"
+          echo "DuckDuckGo relies on Bing + crawling"
+
+      - name: Create index summary
+        run: |
+          echo "Generating summary..."
+
+          mkdir -p network
+
+          {
+            echo "SEARCH ENGINE FEED SUMMARY"
+            echo "==========================="
+            echo ""
+            echo "Pages included:"
+          } > network/search-summary.txt
+
+          if [ -d "pages" ]; then
+            for file in pages/*.html; do
+              [ -f "$file" ] || continue
+              echo "- $file" >> network/search-summary.txt
+            done
+          else
+            echo "No pages folder found" >> network/search-summary.txt
+          fi
+
+      - name: Show output
+        run: |
+          echo "=== SEARCH FEED ==="
+          cat network/search-feed.json || true
+
+          echo ""
+          echo "=== SUMMARY ==="
+          cat network/search-summary.txt || true
