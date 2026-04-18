@@ -1,0 +1,50 @@
+name: SEO Page Generator
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate pages
+        run: |
+          mkdir -p pages
+
+          while read keyword; do
+            slug=$(echo "$keyword" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+
+            cat > pages/$slug.html <<EOF
+<!DOCTYPE html>
+<html>
+<head>
+  <title>$keyword | Emergency Cash Loans</title>
+  <meta name="description" content="Information about $keyword">
+  <meta name="robots" content="index, follow">
+</head>
+<body>
+
+<h1>$keyword</h1>
+
+<p>This page explains options related to $keyword including emergency financial assistance and short-term loan solutions.</p>
+
+<a href="/emergencycashloans/">Home</a>
+
+</body>
+</html>
+EOF
+
+          done < keywords.txt
+
+      - name: Commit pages
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add pages/
+          git commit -m "Auto SEO pages" || exit 0
+          git push
