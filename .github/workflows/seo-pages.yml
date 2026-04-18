@@ -14,27 +14,83 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate SEO Pages (filtered)
+      - name: Generate SEO Pages with Smart Clusters
         run: |
           mkdir -p pages
 
+          # =========================
+          # CLUSTER PATTERN SYSTEM
+          # =========================
+
+          emergency_patterns=(
+            "emergency cash" "emergency loan" "urgent cash" "money emergency"
+            "cash emergency" "financial emergency" "emergency funds"
+            "emergency help" "urgent money" "cash urgently"
+            "emergency funding" "emergency assistance"
+          )
+
+          payday_patterns=(
+            "payday loan" "fast payday" "payday advance" "paycheck advance"
+            "early paycheck" "wage advance" "salary advance"
+            "pay advance" "cash before payday"
+          )
+
+          nocredit_patterns=(
+            "no credit" "no credit check" "bad credit" "poor credit"
+            "credit free" "credit not required" "no credit needed"
+            "no credit history"
+          )
+
+          advance_patterns=(
+            "cash advance" "instant cash" "money advance" "quick advance"
+            "instant advance" "fast advance" "direct advance"
+            "advance cash" "instant money"
+          )
+
+          general_patterns=(
+            "loan" "cash loan" "personal loan" "quick loan"
+            "online loan" "fast loan" "instant loan"
+          )
+
+          match_cluster() {
+            local keyword="$1"
+
+            for p in "${emergency_patterns[@]}"; do
+              [[ "$keyword" == *"$p"* ]] && echo "emergency" && return
+            done
+
+            for p in "${payday_patterns[@]}"; do
+              [[ "$keyword" == *"$p"* ]] && echo "payday" && return
+            done
+
+            for p in "${nocredit_patterns[@]}"; do
+              [[ "$keyword" == *"$p"* ]] && echo "nocredit" && return
+            done
+
+            for p in "${advance_patterns[@]}"; do
+              [[ "$keyword" == *"$p"* ]] && echo "advance" && return
+            done
+
+            for p in "${general_patterns[@]}"; do
+              [[ "$keyword" == *"$p"* ]] && echo "general" && return
+            done
+
+            echo "general"
+          }
+
+          # =========================
+          # PAGE GENERATION
+          # =========================
+
           while read keyword; do
-            score=0
 
-            if [[ "$keyword" == *"instant"* ]]; then score=$((score+3)); fi
-            if [[ "$keyword" == *"apply"* ]]; then score=$((score+3)); fi
-            if [[ "$keyword" == *"emergency"* ]]; then score=$((score+3)); fi
-            if [[ "$keyword" == *"loan"* ]]; then score=$((score+2)); fi
-            if [[ "$keyword" == *"cash"* ]]; then score=$((score+2)); fi
-            if [[ "$keyword" == *"no credit check"* ]]; then score=$((score+3)); fi
-            if [[ "$keyword" == *"bad credit"* ]]; then score=$((score+2)); fi
+            cluster=$(match_cluster "$keyword")
 
-            # ONLY generate strong pages
-            if [ $score -ge 6 ]; then
+            slug=$(echo "$keyword" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
-              slug=$(echo "$keyword" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+            mkdir -p pages/$cluster
 
-              cat > pages/$slug.html <<EOF
+            cat > pages/$cluster/$slug.html <<EOF
 <!DOCTYPE html>
 <html>
 <head>
@@ -48,19 +104,19 @@ jobs:
 <h1>$keyword</h1>
 
 <p>
-This page covers $keyword including eligibility, fast approval options, and emergency funding solutions.
+This page belongs to the <strong>$cluster</strong> topic cluster.
+It covers $keyword options including eligibility, approval speed, and funding methods.
 </p>
 
 <h3>Related pages</h3>
 <ul>
   <li><a href="/emergencycashloans/">Home</a></li>
+  <li><a href="/pages/$cluster/">More in this category</a></li>
 </ul>
 
 </body>
 </html>
 EOF
-
-            fi
 
           done < keywords.txt
 
@@ -69,5 +125,5 @@ EOF
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add pages/
-          git commit -m "Smart SEO page generation" || exit 0
+          git commit -m "Smart SEO cluster generation" || exit 0
           git push
