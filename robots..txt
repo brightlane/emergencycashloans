@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://brightlane.github.io/emergencycashloans/sitemap.xml
