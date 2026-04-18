@@ -1,4 +1,4 @@
-echo "EXPANDING PAGES SAFELY (NO SED)"
+echo "SAFE PAGE EXPAND START"
 
 for file in pages/*.html; do
   [ -f "$file" ] || continue
@@ -14,10 +14,10 @@ for file in pages/*.html; do
       if ($0 ~ /<\/body>/ && done == 0) {
 
         print "<hr>"
-        print "<div class=\"seo-links\">"
+        print "<div class=\"internal-links\">"
         print "<ul>"
         print "<li><a href=\"/emergencycashloans/\">Home</a></li>"
-        print "<li><a href=\"/pages/cash-advance-guide.html\">Cash Advance Guide</a></li>"
+        print "<li><a href=\"/pages/cash-advance-guide.html\">Cash Advance</a></li>"
         print "<li><a href=\"/pages/payday-loans-explained.html\">Payday Loans</a></li>"
         print "<li><a href=\"/pages/installment-loans-guide.html\">Installment Loans</a></li>"
         print "</ul>"
@@ -30,3 +30,5 @@ for file in pages/*.html; do
 
   mv "$tmp" "$file"
 done
+
+echo "SAFE PAGE EXPAND DONE"
