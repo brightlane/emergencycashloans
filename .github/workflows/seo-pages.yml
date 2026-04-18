@@ -1,4 +1,4 @@
-name: Smart SEO Page Generator
+name: SEO Engine Runner
 
 permissions:
   contents: write
@@ -15,76 +15,39 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Debug files
-        run: ls -la
+      # =========================
+      # INSTALL NODE (CRITICAL FIX)
+      # =========================
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Generate SEO Pages
-        shell: bash
+      # =========================
+      # RUN KEYWORD GENERATOR
+      # =========================
+      - name: Generate Keywords
+        run: node keyword-generator.js
+
+      # =========================
+      # DEBUG OUTPUT (IMPORTANT)
+      # =========================
+      - name: Show generated file
         run: |
-          set -e
+          ls -la
+          cat keywords.txt || echo "keywords.txt missing"
 
-          mkdir -p pages/emergency
-          mkdir -p pages/payday
-          mkdir -p pages/nocredit
-          mkdir -p pages/advance
-          mkdir -p pages/general
-
-          if [ ! -f keywords.txt ]; then
-            echo "ERROR: keywords.txt is missing"
-            exit 1
-          fi
-
-          echo "keywords.txt found:"
-          cat keywords.txt
-
-          created=0
-
-          while IFS= read -r keyword || [ -n "$keyword" ]; do
-
-            [ -z "$keyword" ] && continue
-
-            cluster="general"
-
-            if [[ "$keyword" == *"emergency"* ]]; then cluster="emergency"; fi
-            if [[ "$keyword" == *"payday"* ]]; then cluster="payday"; fi
-            if [[ "$keyword" == *"no credit"* ]]; then cluster="nocredit"; fi
-            if [[ "$keyword" == *"cash advance"* ]]; then cluster="advance"; fi
-
-            slug=$(echo "$keyword" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
-
-            FILE="pages/$cluster/$slug.html"
-
-            echo "Creating: $FILE"
-            created=$((created+1))
-
-            cat > "$FILE" <<EOF
-<!DOCTYPE html>
-<html>
-<head>
-  <title>$keyword | Emergency Cash Loans</title>
-</head>
-<body>
-<h1>$keyword</h1>
-<p>Cluster: $cluster</p>
-</body>
-</html>
-EOF
-
-          done < keywords.txt
-
-          echo "Pages created: $created"
-
+      # =========================
+      # COMMIT RESULT
+      # =========================
       - name: Commit changes
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
-          git add pages/
+          git add keywords.txt
 
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
+          git diff --cached --quiet && echo "No changes" && exit 0
 
-          git commit -m "Generate SEO pages"
+          git commit -m "Generated keywords"
           git push
