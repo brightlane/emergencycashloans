@@ -1,4 +1,4 @@
-name: SEO Engine Runner
+name: SEO Master Pipeline
 
 permissions:
   contents: write
@@ -12,42 +12,66 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
 
-      # =========================
-      # INSTALL NODE (CRITICAL FIX)
-      # =========================
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      # =====================
+      # CHECKOUT
+      # =====================
+      - uses: actions/checkout@v4
+
+      # =====================
+      # NODE SETUP
+      # =====================
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # =========================
-      # RUN KEYWORD GENERATOR
-      # =========================
-      - name: Generate Keywords
+      # =====================
+      # SAFETY CHECK
+      # =====================
+      - name: Check repo
+        run: |
+          echo "ROOT FILES"
+          ls || true
+
+      # =====================
+      # ENSURE FILE EXISTS
+      # =====================
+      - name: Validate generator
+        run: |
+          if [ ! -f keyword-generator.js ]; then
+            echo "MISSING keyword-generator.js"
+            exit 1
+          fi
+
+      # =====================
+      # RUN GENERATOR
+      # =====================
+      - name: Generate keywords
         run: node keyword-generator.js
 
-      # =========================
-      # DEBUG OUTPUT (IMPORTANT)
-      # =========================
-      - name: Show generated file
+      # =====================
+      # VERIFY OUTPUT
+      # =====================
+      - name: Check output
         run: |
-          ls -la
-          cat keywords.txt || echo "keywords.txt missing"
+          if [ ! -f keywords.txt ]; then
+            echo "keywords.txt NOT CREATED"
+            exit 1
+          fi
 
-      # =========================
-      # COMMIT RESULT
-      # =========================
-      - name: Commit changes
+          head -20 keywords.txt
+
+      # =====================
+      # COMMIT OUTPUT
+      # =====================
+      - name: Commit results
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
           git add keywords.txt
 
-          git diff --cached --quiet && echo "No changes" && exit 0
+          git diff --cached --quiet && exit 0
 
-          git commit -m "Generated keywords"
+          git commit -m "SEO build update"
           git push
