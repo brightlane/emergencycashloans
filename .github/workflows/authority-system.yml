@@ -1,4 +1,4 @@
-name: Authority System (SAFE TEST)
+name: Authority System (Stable)
 
 permissions:
   contents: write
@@ -9,14 +9,39 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  authority:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Check repo
+      - name: Ensure pages exist
         run: |
-          echo "Authority system is running"
-          ls -la
+          if [ ! -d pages ]; then
+            echo "No pages folder"
+            exit 0
+          fi
+
+      - name: Create authority map (no file editing yet)
+        run: |
+          echo "Generating authority scores..."
+
+          for file in pages/*.html; do
+            if [ -f "$file" ]; then
+
+              name=$(basename "$file")
+
+              score=1
+
+              # boost core pages
+              case "$name" in
+                *cash-advance*) score=5 ;;
+                *payday*) score=5 ;;
+                *installment*) score=4 ;;
+                *emergency*) score=5 ;;
+              esac
+
+              echo "$name => score $score"
+            fi
+          done
