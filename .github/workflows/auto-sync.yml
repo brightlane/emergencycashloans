@@ -1,0 +1,60 @@
+name: Auto Sync Push
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # required to push
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0   # IMPORTANT for rebase
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # 👉 your step that makes changes goes here
+      - name: Make changes (example)
+        run: |
+          echo "Updated at $(date)" >> log.txt
+          git add .
+          git commit -m "Auto update" || echo "No changes to commit"
+
+      - name: Pull, rebase, and push with retry
+        run: |
+          n=0
+          until [ $n -ge 5 ]
+          do
+            echo "Attempt $n"
+
+            git fetch origin
+
+            if git rebase origin/main; then
+              if git push origin main; then
+                echo "Push successful"
+                break
+              fi
+            else
+              echo "Rebase failed, aborting"
+              git rebase --abort
+            fi
+
+            n=$((n+1))
+            sleep 2
+          done
+
+          if [ $n -eq 5 ]; then
+            echo "Failed after 5 attempts"
+            exit 1
+          fi
