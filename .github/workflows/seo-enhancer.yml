@@ -1,49 +1,25 @@
-echo "=== SAFE HTML PAGE EXPAND (STABLE VERSION) ==="
-
-# safety check
-if [ ! -d "pages" ]; then
-  echo "pages folder not found - exiting safely"
-  exit 0
-fi
-
 for file in pages/*.html; do
-  if [ -f "$file" ]; then
+  [ -f "$file" ] || continue
 
-    echo "Processing: $file"
+  tmp="${file}.tmp"
 
-    tmp="${file}.tmp"
+  awk '
+    BEGIN { done=0 }
 
-    awk '
-      BEGIN { injected=0 }
+    {
+      print $0
 
-      {
-        print $0
+      if ($0 ~ /<\/body>/ && done == 0) {
+        print "<div class=\"internal-links\">"
+        print "<a href=\"/emergencycashloans/\">Home</a>"
+        print "<a href=\"/pages/cash-advance-guide.html\">Cash Advance</a>"
+        print "<a href=\"/pages/payday-loans-explained.html\">Payday Loans</a>"
+        print "</div>"
 
-        # inject BEFORE </body>
-        if ($0 ~ /<\/body>/ && injected == 0) {
-
-          print ""
-          print "<hr>"
-          print "<div class=\"seo-internal-links\">"
-          print "<h3>Related Guides</h3>"
-          print "<ul>"
-          print "<li><a href=\"/emergencycashloans/\">🏠 Home Hub</a></li>"
-          print "<li><a href=\"/pages/cash-advance-guide.html\">Cash Advance Guide</a></li>"
-          print "<li><a href=\"/pages/payday-loans-explained.html\">Payday Loans Explained</a></li>"
-          print "<li><a href=\"/pages/installment-loans-guide.html\">Installment Loans Guide</a></li>"
-          print "<li><a href=\"/pages/emergency-cash-options.html\">Emergency Cash Options</a></li>"
-          print "</ul>"
-          print "</div>"
-          print ""
-
-          injected=1
-        }
+        done=1
       }
-    ' "$file" > "$tmp"
+    }
+  ' "$file" > "$tmp"
 
-    mv "$tmp" "$file"
-
-  fi
+  mv "$tmp" "$file"
 done
-
-echo "=== PAGE EXPANSION COMPLETE ==="
