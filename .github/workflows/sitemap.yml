@@ -1,51 +1,10 @@
-name: DEBUG SEO PIPELINE
+- name: Show repo structure
+  run: |
+    echo "ROOT FILES"
+    ls
 
-permissions:
-  contents: write
+    echo "DETAILED LIST"
+    /bin/ls -la || true
 
-on:
-  workflow_dispatch:
-  push:
-
-jobs:
-  debug:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Show full repo structure
-        run: |
-          echo "=== ROOT FILES ==="
-          ls -ლა
-
-          echo "=== WORKING DIRECTORY ==="
-          pwd
-
-      - name: Check critical files
-        run: |
-          echo "Checking files..."
-
-          if [ -f keyword-generator.js ]; then
-            echo "✔ keyword-generator.js EXISTS"
-          else
-            echo "❌ keyword-generator.js MISSING"
-          fi
-
-          if [ -f keywords.txt ]; then
-            echo "✔ keywords.txt EXISTS"
-          else
-            echo "⚠ keywords.txt NOT FOUND (will be generated or missing)"
-          fi
-
-      - name: Try running generator safely
-        run: |
-          echo "Attempting node execution..."
-
-          node keyword-generator.js || echo "❌ NODE SCRIPT FAILED"
-
-      - name: Final folder check
-        run: |
-          echo "=== AFTER RUN ==="
-          ls -R
+    echo "WORKDIR"
+    pwd
