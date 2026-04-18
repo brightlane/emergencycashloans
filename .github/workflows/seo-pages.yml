@@ -15,7 +15,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate SEO Pages with Smart Clusters
+        shell: bash
         run: |
+          set -e
+
           mkdir -p pages
 
           # =========================
@@ -82,15 +85,22 @@ jobs:
           # PAGE GENERATION
           # =========================
 
-          while read keyword; do
+          if [ ! -f keywords.txt ]; then
+            echo "keywords.txt not found"
+            exit 0
+          fi
+
+          while IFS= read -r keyword || [ -n "$keyword" ]; do
+
+            [ -z "$keyword" ] && continue
 
             cluster=$(match_cluster "$keyword")
 
             slug=$(echo "$keyword" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
-            mkdir -p pages/$cluster
+            mkdir -p "pages/$cluster"
 
-            cat > pages/$cluster/$slug.html <<EOF
+            cat > "pages/$cluster/$slug.html" <<EOF
 <!DOCTYPE html>
 <html>
 <head>
