@@ -1,73 +1,23 @@
-name: Backlink Seeder (Stable)
-
-permissions:
-  contents: write
+name: Backlink Seeder (Debug Safe)
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 jobs:
-  seed:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create safe hub page
+      - name: Show repo structure
         run: |
-          mkdir -p pages/hub
+          echo "ROOT:"
+          ls -la
 
-          cat > pages/hub/index.html << 'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Loan Resource Hub</title>
-  <meta name="description" content="Financial guides and loan resources">
-</head>
-<body>
+          echo "PAGES:"
+          ls -la pages || echo "No pages folder"
 
-<h1>Loan Resource Hub</h1>
-
-<ul>
-  <li><a href="/pages/emergency/">Emergency Cash Loans</a></li>
-  <li><a href="/pages/payday/">Payday Loans Guide</a></li>
-  <li><a href="/pages/advance/">Cash Advance Info</a></li>
-  <li><a href="/pages/nocredit/">No Credit Loans</a></li>
-</ul>
-
-</body>
-</html>
-EOF
-
-      - name: Create RSS feed safely
-        run: |
-          mkdir -p pages/feed
-
-          cat > pages/feed/rss.xml << 'EOF'
-<?xml version="1.0"?>
-<rss version="2.0">
-<channel>
-  <title>Loan Updates</title>
-  <link>https://example.com</link>
-  <description>Loan resources feed</description>
-
-  <item>
-    <title>Emergency Cash Loans</title>
-    <link>https://example.com/pages/emergency/</link>
-  </item>
-
-</channel>
-</rss>
-EOF
-
-      - name: Ping search engines
-        run: |
-          SITE="https://example.com/sitemap.xml"
-
-          curl -s "https://www.google.com/ping?sitemap=$SITE" || true
-          curl -s "https://www.bing.com/ping?sitemap=$SITE" || true
-
-          echo "Completed successfully"
+      - name: Confirm workflow runs
+        run: echo "Workflow executed successfully"
