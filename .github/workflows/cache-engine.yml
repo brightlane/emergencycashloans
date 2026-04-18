@@ -1,89 +1,21 @@
-name: Cache Layer Engine (Keyword + Content Skip System)
+name: Entry Engine (Stable Starter)
 
 on:
-  workflow_run:
-    workflows:
-      - "Priority Queue Engine (SEO Pipeline Order)"
-    types:
-      - completed
+  push:
+    branches: [main]
+
+  workflow_dispatch:
 
 jobs:
-  cache:
+  run:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Set Git identity
+      - name: Basic test run
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Pull latest
-        run: |
-          git pull origin main --rebase
-
-      - name: Build cache system
-        run: |
-          mkdir -p cache
-
-          python3 - << 'EOF'
-import os
-import json
-import hashlib
-
-CACHE_FILE = "cache/cache.json"
-
-# load cache if exists
-if os.path.exists(CACHE_FILE):
-    with open(CACHE_FILE, "r") as f:
-        cache = json.load(f)
-else:
-    cache = {}
-
-def hash_text(text):
-    return hashlib.md5(text.encode()).hexdigest()
-
-updated = False
-
-for root, dirs, files in os.walk("."):
-    for file in files:
-        if file.endswith(".json") or file.endswith(".txt"):
-            path = os.path.join(root, file)
-
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                h = hash_text(content)
-
-                # skip if already processed
-                if cache.get(h):
-                    continue
-
-                # mark as processed
-                cache[h] = True
-                updated = True
-
-            except:
-                pass
-
-# save cache
-if updated:
-    with open(CACHE_FILE, "w") as f:
-        json.dump(cache, f, indent=2)
-EOF
-
-      - name: Commit cache updates
-        run: |
-          git add cache/
-
-          git commit -m "Cache update (skip duplicate processing)" || echo "No changes"
-
-          git push origin main
+          echo "System is alive"
+          mkdir -p output
+          echo "OK" > output/status.txt
