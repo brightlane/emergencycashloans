@@ -1,15 +1,43 @@
-name: Social Feed Test
+name: Social Feeder (Test Mode)
 
 on:
+  push:
+    branches: [main]
+
   workflow_dispatch:
 
 jobs:
-  test:
+  social-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Print status
-        run: echo "SOCIAL FEEDER WORKFLOW IS RUNNING SUCCESSFULLY"
+      - name: Initialize test mode
+        run: |
+          echo "🚀 SOCIAL FEEDER TEST MODE ACTIVE"
+
+      - name: Simulate social content generation
+        run: |
+          mkdir -p social-output
+
+          echo "Test Post 1: SEO content engine active" > social-output/post1.txt
+          echo "Test Post 2: Automation pipeline running" > social-output/post2.txt
+          echo "Test Post 3: GitHub Actions feeder test" > social-output/post3.txt
+
+      - name: Show output
+        run: |
+          echo "Generated Social Posts:"
+          cat social-output/post1.txt
+          cat social-output/post2.txt
+          cat social-output/post3.txt
+
+      - name: Commit test output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add social-output || true
+          git commit -m "Social feeder test output" || echo "No changes to commit"
+          git push origin main || echo "No push needed"
