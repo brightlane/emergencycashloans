@@ -1,0 +1,55 @@
+name: Social Media Feeder
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  social:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Generate social posts
+        run: |
+          mkdir -p social
+
+          echo "Generating social media feed..."
+
+          cat > social/posts.txt << 'EOF'
+🚀 New financial guide available:
+Check out our latest insights on emergency cash loans.
+
+👉 https://yourdomain.com/pages/emergency/
+
+#finance #loans #cashadvance
+
+---
+
+💰 Need fast funding?
+Learn about payday loan options and approval tips.
+
+👉 https://yourdomain.com/pages/payday/
+
+#paydayloans #moneytips #finance
+
+---
+
+⚡ Cash advance explained simply.
+See how quick funding works.
+
+👉 https://yourdomain.com/pages/advance/
+
+#cashadvance #fastcash
+EOF
+
+      - name: Show generated posts
+        run: |
+          echo "=== SOCIAL POSTS ==="
+          cat social/posts.txt
