@@ -1,0 +1,47 @@
+{
+  "engine": {
+    "mode": "high-throughput",
+    "parallel_workers": true,
+    "max_concurrency": 17
+  },
+
+  "batch_merge": {
+    "enabled": true,
+    "interval_minutes": 5
+  },
+
+  "deduplication": {
+    "enabled": true,
+    "hash_algorithm": "md5"
+  },
+
+  "priority": {
+    "enabled": true,
+    "order": [
+      "seo",
+      "keywords",
+      "content",
+      "authority",
+      "indexing",
+      "sitemap",
+      "social"
+    ]
+  },
+
+  "cache": {
+    "enabled": true,
+    "store_path": "cache/cache.json",
+    "skip_duplicates": true
+  },
+
+  "registry": {
+    "enabled": true,
+    "log_all_outputs": true
+  },
+
+  "guard": {
+    "enabled": true,
+    "cleanup_tmp_files": true,
+    "auto_repair_missing_files": true
+  }
+}
