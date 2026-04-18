@@ -1,4 +1,4 @@
-name: Robots TXT Feeder (Safe Mode)
+name: Robots Feeder Stable
 
 on:
   workflow_dispatch:
@@ -13,25 +13,17 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Generate robots.txt
+      - name: Create robots.txt safely
+        run: |
+          echo "User-agent: *" > robots.txt
+          echo "Allow: /" >> robots.txt
+          echo "Disallow: /node_modules/" >> robots.txt
+          echo "Disallow: /.github/" >> robots.txt
+
+      - name: Create network folder copy
         run: |
           mkdir -p network
+          cp robots.txt network/robots.txt
 
-          cat > robots.txt << 'EOF'
-User-agent: *
-Allow: /
-
-Disallow: /node_modules/
-Disallow: /.github/
-Disallow: /network/
-
-Sitemap: https://YOURDOMAIN.com/sitemap.xml
-EOF
-
-      - name: Save network copy
-        run: cp robots.txt network/robots.txt
-
-      - name: Show output
-        run: |
-          echo "=== robots.txt ==="
-          cat robots.txt
+      - name: Show result
+        run: cat robots.txt
