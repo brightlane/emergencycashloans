@@ -1,4 +1,4 @@
-name: Backlink Seeder (Index Boost)
+name: Backlink Seeder (Stable)
 
 permissions:
   contents: write
@@ -13,21 +13,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Generate simple link hub page
+      - name: Create safe hub page
         run: |
           mkdir -p pages/hub
-
-          echo "Building link hub..."
 
           cat > pages/hub/index.html << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
   <title>Loan Resource Hub</title>
-  <meta name="description" content="Financial resource hub for loans, cash advances, and payday guidance">
+  <meta name="description" content="Financial guides and loan resources">
 </head>
 <body>
 
@@ -40,32 +38,25 @@ jobs:
   <li><a href="/pages/nocredit/">No Credit Loans</a></li>
 </ul>
 
-<p>This hub helps organize financial resources and improve discoverability.</p>
-
 </body>
 </html>
 EOF
 
-      - name: Create RSS feed (for indexing signals)
+      - name: Create RSS feed safely
         run: |
           mkdir -p pages/feed
 
           cat > pages/feed/rss.xml << 'EOF'
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0"?>
 <rss version="2.0">
 <channel>
-  <title>Emergency Cash Loans Feed</title>
-  <link>https://YOURDOMAIN.com</link>
-  <description>Latest financial guides and loan resources</description>
+  <title>Loan Updates</title>
+  <link>https://example.com</link>
+  <description>Loan resources feed</description>
 
   <item>
-    <title>Emergency Cash Loans Guide</title>
-    <link>https://YOURDOMAIN.com/pages/emergency/</link>
-  </item>
-
-  <item>
-    <title>Payday Loan Guide</title>
-    <link>https://YOURDOMAIN.com/pages/payday/</link>
+    <title>Emergency Cash Loans</title>
+    <link>https://example.com/pages/emergency/</link>
   </item>
 
 </channel>
@@ -74,9 +65,9 @@ EOF
 
       - name: Ping search engines
         run: |
-          SITE="https://YOURDOMAIN.com/sitemap.xml"
+          SITE="https://example.com/sitemap.xml"
 
           curl -s "https://www.google.com/ping?sitemap=$SITE" || true
           curl -s "https://www.bing.com/ping?sitemap=$SITE" || true
 
-          echo "Done"
+          echo "Completed successfully"
