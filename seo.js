@@ -1,23 +1,68 @@
-(function () {
-  const metaTags = [
-    { name: "description", content: "Emergency cash loans information and resources" },
-    { name: "robots", content: "index, follow" },
+name: Safe SEO Build (No Loop)
 
-    { property: "og:title", content: "Emergency Cash Loans" },
-    { property: "og:description", content: "Fast access to emergency cash loan resources" },
-    { property: "og:url", content: "https://brightlane.github.io/emergencycashloans/" },
-    { property: "og:type", content: "website" },
+permissions:
+  contents: write
 
-    { name: "twitter:card", content: "summary" }
-  ];
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
 
-  metaTags.forEach(tag => {
-    const meta = document.createElement("meta");
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-    if (tag.name) meta.setAttribute("name", tag.name);
-    if (tag.property) meta.setAttribute("property", tag.property);
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    meta.setAttribute("content", tag.content);
-    document.head.appendChild(meta);
-  });
-})();
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # =========================
+      # SAFETY: DO NOT RUN IF BOT COMMIT
+      # =========================
+      - name: Prevent infinite loop
+        if: github.actor == 'github-actions[bot]'
+        run: |
+          echo "Bot triggered run - stopping to prevent loop"
+          exit 0
+
+      - name: Show repo
+        run: |
+          echo "FILES:"
+          ls
+
+      - name: Run keyword generator
+        run: |
+          if [ -f keyword-generator.js ]; then
+            node keyword-generator.js
+          else
+            echo "No generator found, skipping"
+          fi
+
+      - name: Check output
+        run: |
+          if [ -f keywords.txt ]; then
+            echo "Keywords generated:"
+            head -20 keywords.txt
+          else
+            echo "No keywords generated"
+          fi
+
+      # =========================
+      # SAFE COMMIT (ONLY IF REAL CHANGE)
+      # =========================
+      - name: Commit changes safely
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add keywords.txt pages/ || true
+
+          git diff --cached --quiet && echo "No changes" && exit 0
+
+          git commit -m "safe SEO update"
+          git push
