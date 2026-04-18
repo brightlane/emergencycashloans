@@ -1,0 +1,106 @@
+name: SEO Indexing + Quality Gate
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # =========================
+      # CHECKOUT
+      # =========================
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # =========================
+      # CHECK IF PAGES EXIST
+      # =========================
+      - name: Verify pages
+        run: |
+          if [ ! -d pages ]; then
+            echo "No pages folder - skipping indexing"
+            exit 0
+          fi
+
+      # =========================
+      # QUALITY FILTER (VERY IMPORTANT)
+      # =========================
+      - name: Filter low-quality pages
+        run: |
+          echo "Checking page quality..."
+
+          for file in pages/*.html; do
+
+            if [ -f "$file" ]; then
+
+              size=$(wc -c < "$file")
+
+              # skip thin pages (< 800 bytes = low quality)
+              if [ "$size" -lt 800 ]; then
+                echo "Skipping thin page: $file"
+                rm "$file"
+              fi
+
+            fi
+
+          done
+
+      # =========================
+      # BUILD URL LIST
+      # =========================
+      - name: Generate URL list
+        run: |
+          BASE="https://brightlane.github.io/emergencycashloans"
+
+          echo "URLs:" > urls.txt
+
+          for file in pages/*.html; do
+            if [ -f "$file" ]; then
+              name=$(basename "$file")
+              echo "$BASE/pages/$name" >> urls.txt
+            fi
+          done
+
+          cat urls.txt
+
+      # =========================
+      # BING INDEXING API (OPTIONAL)
+      # =========================
+      - name: Submit to Bing (if key exists)
+        run: |
+          if [ -z "${{ secrets.BING_API_KEY }}" ]; then
+            echo "No Bing API key - skipping submission"
+            exit 0
+          fi
+
+          SITE="https://brightlane.github.io/emergencycashloans"
+
+          curl -X POST "https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch?apikey=${{ secrets.BING_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"siteUrl\": \"$SITE\",
+            \"urlList\": $(cat urls.txt | jq -R -s -c 'split("\n") | map(select(length>0))')
+          }" || echo "Bing submission skipped"
+
+      # =========================
+      # COMMIT CLEANUP
+      # =========================
+      - name: Commit cleaned pages
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add pages/ || true
+
+          git diff --cached --quiet && echo "No changes" && exit 0
+
+          git commit -m "SEO quality cleanup + indexing prep"
+          git push
