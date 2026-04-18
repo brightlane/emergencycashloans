@@ -1,9 +1,9 @@
-name: Auto Keyword Expansion
+name: Keyword Expansion Engine
 
 on:
-  schedule:
-    - cron: "0 0 * * 0"  # weekly expansion
   workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"
 
 jobs:
   expand:
@@ -14,34 +14,30 @@ jobs:
 
       - name: Expand keywords
         run: |
-          base="keywords.txt"
+          modifiers="fast;instant;urgent;same day;online;today;now"
+          intents="apply;get;approval;qualify;requirements"
+          credit="bad credit;no credit check;unemployed;low income"
+          use="rent;bills;medical;car repair;emergency"
+
           output="keywords-expanded.txt"
+          > $output
 
-          echo "" > $output
-
-          modifiers="fast;instant;emergency;same day;online;no credit check;quick"
-          intents="apply;requirements;eligibility;how to get;best;options"
-
-          while read keyword; do
+          while read base; do
             for m in $(echo $modifiers | tr ';' ' '); do
-              echo "$m $keyword" >> $output
+              for i in $(echo $intents | tr ';' ' '); do
+                for c in $(echo $credit | tr ';' ' '); do
+                  for u in $(echo $use | tr ';' ' '); do
+                    echo "$m $base $i $c $u" >> $output
+                  done
+                done
+              done
             done
+          done < keywords.txt
 
-            for i in $(echo $intents | tr ';' ' '); do
-              echo "$keyword $i" >> $output
-            done
-
-          done < $base
-
-      - name: Deduplicate
-        run: |
-          sort keywords-expanded.txt | uniq > keywords-final.txt
-
-      - name: Replace keyword file
-        run: |
+          sort $output | uniq > keywords-final.txt
           mv keywords-final.txt keywords.txt
 
-      - name: Commit updates
+      - name: Commit keywords
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
