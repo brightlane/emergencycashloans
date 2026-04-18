@@ -1,4 +1,4 @@
-name: SEO Authority + Hub Boost System
+name: Authority System (SAFE TEST)
 
 permissions:
   contents: write
@@ -9,92 +9,14 @@ on:
     branches: [main]
 
 jobs:
-  authority:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-
-      # =========================
-      # CHECKOUT
-      # =========================
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # =========================
-      # CHECK PAGES EXIST
-      # =========================
-      - name: Verify pages
+      - name: Check repo
         run: |
-          if [ ! -d pages ]; then
-            echo "No pages folder - skipping"
-            exit 0
-          fi
-
-      # =========================
-      # CREATE HUB BOOST RULES
-      # =========================
-      - name: Apply authority scoring
-        run: |
-          mkdir -p pages
-
-          HUB_KEYWORDS="emergency cash loans|fast payday loans|no credit check loans|instant cash advance"
-
-          for file in pages/*.html; do
-
-            if [ -f "$file" ]; then
-
-              name=$(basename "$file")
-
-              score=1
-
-              # HUB BOOST: main topics get higher weight
-              for hub in $HUB_KEYWORDS; do
-                if echo "$name" | grep -qi "$hub"; then
-                  score=5
-                fi
-              done
-
-              # inject hidden authority score (SEO signal structure)
-              sed -i "/<head>/a \
-<meta name=\"seo-authority-score\" content=\"$score\">" "$file"
-
-              # add internal priority hint block
-              sed -i "s|</body>|<div data-seo-score=\"$score\"></div>\n</body>|" "$file"
-
-            fi
-
-          done
-
-      # =========================
-      # CREATE HUB PAGE PRIORITY LINKS
-      # =========================
-      - name: Strengthen hub page
-        run: |
-          if [ -f pages/index.html ]; then
-
-            sed -i '/<\/body>/i \
-<div class="seo-hub-boost">\
-<h2>Priority Topics</h2>\
-<ul>\
-<li><a href="pages/fast-payday-loans.html">Fast Payday Loans</a></li>\
-<li><a href="pages/no-credit-check-loans.html">No Credit Check Loans</a></li>\
-<li><a href="pages/instant-cash-advance.html">Instant Cash Advance</a></li>\
-</ul>\
-</div>' pages/index.html
-
-          fi
-
-      # =========================
-      # COMMIT SAFELY
-      # =========================
-      - name: Commit authority updates
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-
-          git add pages/ || true
-
-          git diff --cached --quiet && echo "No changes" && exit 0
-
-          git commit -m "Add SEO authority scoring system"
-          git push
+          echo "Authority system is running"
+          ls -la
