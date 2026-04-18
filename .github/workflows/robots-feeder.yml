@@ -16,31 +16,36 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Create robots.txt
+      - name: Generate robots.txt
         run: |
-          echo "Generating robots.txt..."
-
-          mkdir -p network
-
           cat > robots.txt << 'EOF'
 User-agent: *
 Allow: /
 
-# Block sensitive or internal folders
 Disallow: /node_modules/
 Disallow: /.github/
 Disallow: /network/
 
-# Sitemap location
 Sitemap: https://YOURDOMAIN.com/sitemap.xml
 EOF
 
-      - name: Copy robots to network folder
+      - name: Move to network folder
         run: |
           mkdir -p network
           cp robots.txt network/robots.txt
 
-      - name: Show output
+      - name: Commit robots.txt changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add robots.txt network/robots.txt
+
+          git commit -m "Update robots.txt (auto feeder)" || echo "No changes to commit"
+
+          git push || echo "Nothing to push"
+
+      - name: Show result
         run: |
           echo "=== ROBOTS.TXT ==="
           cat robots.txt
