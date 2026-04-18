@@ -15,6 +15,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Debug files
+        run: ls -la
+
       - name: Generate SEO Pages
         shell: bash
         run: |
@@ -27,9 +30,14 @@ jobs:
           mkdir -p pages/general
 
           if [ ! -f keywords.txt ]; then
-            echo "keywords.txt missing"
-            exit 0
+            echo "ERROR: keywords.txt is missing"
+            exit 1
           fi
+
+          echo "keywords.txt found:"
+          cat keywords.txt
+
+          created=0
 
           while IFS= read -r keyword || [ -n "$keyword" ]; do
 
@@ -46,37 +54,37 @@ jobs:
 
             FILE="pages/$cluster/$slug.html"
 
+            echo "Creating: $FILE"
+            created=$((created+1))
+
             cat > "$FILE" <<EOF
 <!DOCTYPE html>
 <html>
 <head>
   <title>$keyword | Emergency Cash Loans</title>
-  <meta name="description" content="$keyword information and options">
-  <meta name="robots" content="index, follow">
 </head>
 <body>
-
 <h1>$keyword</h1>
-
-<p>
-This page is about $keyword and belongs to the $cluster topic cluster.
-</p>
-
-<ul>
-  <li><a href="/emergencycashloans/">Home</a></li>
-  <li><a href="/pages/$cluster/">More in $cluster</a></li>
-</ul>
-
+<p>Cluster: $cluster</p>
 </body>
 </html>
 EOF
 
           done < keywords.txt
 
+          echo "Pages created: $created"
+
       - name: Commit changes
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
+
           git add pages/
-          git commit -m "Generate SEO pages" || exit 0
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Generate SEO pages"
           git push
