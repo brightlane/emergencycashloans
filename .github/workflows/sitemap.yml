@@ -1,10 +1,77 @@
-- name: Show repo structure
-  run: |
-    echo "ROOT FILES"
-    ls
+name: Sitemap Generator (Clean + Stable)
 
-    echo "DETAILED LIST"
-    /bin/ls -la || true
+permissions:
+  contents: write
 
-    echo "WORKDIR"
-    pwd
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  sitemap:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # =========================
+      # CHECKOUT
+      # =========================
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # =========================
+      # VERIFY PAGES EXIST
+      # =========================
+      - name: Check pages folder
+        run: |
+          if [ ! -d pages ]; then
+            echo "No pages folder found - exiting safely"
+            exit 0
+          fi
+
+      # =========================
+      # GENERATE SITEMAP
+      # =========================
+      - name: Build sitemap.xml
+        run: |
+          BASE="https://brightlane.github.io/emergencycashloans"
+
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > sitemap.xml
+          echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' >> sitemap.xml
+
+          # homepage
+          echo "<url><loc>$BASE/</loc></url>" >> sitemap.xml
+
+          # pages
+          for file in pages/*.html; do
+            if [ -f "$file" ]; then
+              name=$(basename "$file")
+              echo "<url><loc>$BASE/pages/$name</loc></url>" >> sitemap.xml
+            fi
+          done
+
+          echo '</urlset>' >> sitemap.xml
+
+      # =========================
+      # DEBUG OUTPUT (SAFE)
+      # =========================
+      - name: Show sitemap
+        run: |
+          echo "Generated sitemap:"
+          cat sitemap.xml || true
+
+      # =========================
+      # COMMIT ONLY IF CHANGED
+      # =========================
+      - name: Commit sitemap
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add sitemap.xml
+
+          git diff --cached --quiet && echo "No changes" && exit 0
+
+          git commit -m "Update sitemap.xml"
+          git push
