@@ -1,0 +1,112 @@
+name: Priority Queue Engine (SEO Pipeline Order)
+
+on:
+  workflow_run:
+    workflows:
+      - "Batch Merge Engine (High Throughput)"
+    types:
+      - completed
+
+jobs:
+  prioritize:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull latest
+        run: |
+          git pull origin main --rebase
+
+      - name: Build priority structure
+        run: |
+          mkdir -p prioritized
+
+          python3 - << 'EOF'
+import os
+import json
+import shutil
+
+# Priority order (lower = runs first in logic)
+PRIORITY = {
+    "seo": 1,
+    "keywords": 2,
+    "content": 3,
+    "authority": 4,
+    "indexing": 5,
+    "sitemap": 6,
+    "social": 7
+}
+
+def detect_type(filename, content):
+    name = filename.lower()
+    if "seo" in name:
+        return "seo"
+    if "keyword" in name:
+        return "keywords"
+    if "content" in name:
+        return "content"
+    if "authority" in name:
+        return "authority"
+    if "index" in name:
+        return "indexing"
+    if "sitemap" in name:
+        return "sitemap"
+    if "social" in name:
+        return "social"
+    return "content"
+
+files = []
+
+for root, dirs, fns in os.walk("."):
+    for f in fns:
+        if f.endswith(".json") or f.endswith(".txt"):
+            path = os.path.join(root, f)
+            try:
+                with open(path, "r", encoding="utf-8") as file:
+                    data = file.read()
+
+                t = detect_type(f, data)
+                p = PRIORITY.get(t, 99)
+
+                files.append((p, path, data))
+            except:
+                pass
+
+# sort by priority
+files.sort(key=lambda x: x[0])
+
+os.makedirs("prioritized", exist_ok=True)
+
+index = 0
+for p, path, data in files:
+    out_path = f"prioritized/{index}_{os.path.basename(path)}"
+
+    with open(out_path, "w", encoding="utf-8") as out:
+        out.write(data)
+
+    index += 1
+EOF
+
+      - name: Replace with prioritized structure
+        run: |
+          cp -r prioritized/* . 2>/dev/null || true
+
+      - name: Commit priority ordering
+        run: |
+          git add .
+
+          git commit -m "Priority ordering (SEO pipeline stage)" || echo "No changes"
+
+          git push origin main
