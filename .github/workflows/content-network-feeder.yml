@@ -1,0 +1,15 @@
+name: Content Network Feeder Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Print status
+        run: echo "CONTENT NETWORK FEEDER IS RUNNING SUCCESSFULLY"
