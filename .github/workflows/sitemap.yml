@@ -1,4 +1,4 @@
-name: Generate Sitemap
+name: SEO Auto Builder
 
 on:
   push:
@@ -7,18 +7,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate sitemap
-        uses: cicirello/generate-sitemap@v1
-        with:
-          base-url-path: https://brightlane.github.io/emergencycashloans/
+      - name: Inject SEO tags into HTML
+        run: |
+          mkdir -p dist
 
-      - name: Commit sitemap
+          cp -r ./* dist/
+
+          FILE="dist/index.html"
+
+          sed -i 's|</head>|\
+<meta name="description" content="Emergency cash loans information and resources">\
+<meta name="robots" content="index, follow">\
+<meta property="og:title" content="Emergency Cash Loans">\
+<meta property="og:description" content="Fast access to emergency cash loan resources">\
+<meta property="og:url" content="https://brightlane.github.io/emergencycashloans/">\
+<meta property="og:type" content="website">\
+<meta name="twitter:card" content="summary">\
+</head>|' $FILE
+
+      - name: Commit processed site
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          git add sitemap.xml
-          git commit -m "Auto sitemap update" || exit 0
+          cp -r dist/* .
+          git add .
+          git commit -m "Auto SEO build" || exit 0
           git push
