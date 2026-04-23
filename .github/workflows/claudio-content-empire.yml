@@ -1,46 +1,32 @@
 name: Claudio Content Empire
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
-
-concurrency:
-  group: claudio-content-empire-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: write
 
 jobs:
   generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
+          cache: npm
 
-      - name: Install deps
-        run: npm ci
+      - name: Install dependencies
+        run: npm install
 
-      - name: Run Claudio orchestrator
-        run: node claudio-orchestrator.js --full-empire
+      - name: Run generation script
+        run: npm run generate --if-present
 
-      - name: Validate output exists
-        run: test -f output/blueprint.full.yaml
+      - name: Build content
+        run: npm run build --if-present
 
-      - name: Commit generated content
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: 'chore: batch article generation [skip ci]'
-          file_pattern: 'output/**'
-          commit_user_name: 'brightlane-bot'
-          commit_user_email: 'brightlane-bot@users.noreply.github.com'
+      - name: Run tests
+        run: npm test --if-present
