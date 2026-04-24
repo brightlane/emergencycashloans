@@ -1,10 +1,9 @@
 name: Daily Articles Workflow
 
-# This allows the workflow to be triggered daily and manually.
 on:
   schedule:
-    - cron: '0 0 * * *'  # This cron expression runs every day at midnight (UTC)
-  workflow_dispatch:  # This allows you to manually trigger the workflow if needed
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:
 
 jobs:
   generate_articles:
@@ -14,51 +13,52 @@ jobs:
       # Checkout the code from your repository
       - name: Checkout repository code
         uses: actions/checkout@v3
-        continue-on-error: false  # Fail the workflow if this step fails
+        continue-on-error: false
 
-      # Set up Python environment for running the article generation script
+      # Set up Python environment
       - name: Set up Python environment
         uses: actions/setup-python@v3
         with:
           python-version: '3.x'
         continue-on-error: false
 
-      # Install necessary dependencies (from your requirements.txt)
+      # Install dependencies
       - name: Install dependencies
         run: |
+          echo "Installing dependencies..."
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-        continue-on-error: false  # Fail if dependencies cannot be installed
+        continue-on-error: false
 
-      # Run the article generation script
+      # Run article generation script with debug info
       - name: Run article generation script
         run: |
           echo "Starting article generation..."
-          python generate_and_upload_keywords.py
-        continue-on-error: true  # Allow the workflow to continue even if the script fails
-        # The error will be caught later in the next steps
-
-      # Verify if the article generation script was successful or failed
+          python generate_and_upload_keywords.py || { echo 'Script failed!'; exit 1; }
+        continue-on-error: true  # This will allow the workflow to continue even if this step fails
+          
+      # Check if the previous step was successful
       - name: Verify article generation success
         run: |
+          echo "Verifying article generation..."
           if [ $? -eq 0 ]; then
             echo "Article generation completed successfully!"
           else
             echo "Error: Article generation script failed!"
             exit 1
-        continue-on-error: false  # This will stop the workflow if the script fails
+        continue-on-error: false
 
-      # Upload the generated articles to S3 (if the generation is successful)
+      # Upload to S3 if successful
       - name: Upload to S3
-        if: success()  # Only run if the article generation was successful
+        if: success()  # Run only if the previous steps were successful
         run: |
           echo "Uploading articles to S3..."
           aws s3 cp path/to/generated/file s3://your-bucket-name/ --recursive
-        continue-on-error: true  # Allows for non-blocking failure if upload fails
+        continue-on-error: true
 
-      # Notify of failure (in case upload or generation failed)
+      # Notify failure if any step failed
       - name: Notify failure
-        if: failure()  # Only run if there's a failure in any previous step
+        if: failure()
         run: |
           echo "The daily article generation process failed. Please check the logs for more details."
-        continue-on-error: true  # Ensures the workflow continues even after failure
+        continue-on-error: true
