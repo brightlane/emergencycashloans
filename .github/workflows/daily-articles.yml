@@ -1,34 +1,27 @@
-name: Daily Articles Workflow
+name: Auto Generate Articles Every Minute
 
 on:
-  push:
-    branches:
-      - main  # Trigger the workflow on pushes to the main branch
-  pull_request:
-    branches:
-      - main  # Trigger on pull requests to the main branch
+  schedule:
+    - cron: '* * * * *'  # Runs every minute
+  workflow_dispatch:  # Optional: allows manual triggering
 
 jobs:
-  dedup:
+  generate_articles:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          fetch-depth: 0
+          python-version: '3.x'
 
-      # Remove or comment out the install dependencies step if you don't have requirements.txt
-      # - name: Install dependencies
-      #   run: |
-      #     pip install -r requirements.txt
-
-      - name: Run deduplication script
+      - name: Install dependencies
         run: |
-          python deduplication.py  # Adjust this based on your actual script
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Commit and push changes
+      - name: Run script to generate articles
         run: |
-          git add .
-          git commit -m "Fix duplicate entries" || echo "No changes"
-          git push origin main
+          python generate_and_upload_keywords.py  # Replace with your script
