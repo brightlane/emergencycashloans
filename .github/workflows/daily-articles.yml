@@ -1,35 +1,31 @@
-name: Dedup Engine
+name: Daily Articles Workflow
 
 on:
   push:
     branches:
-      - main  # Trigger the workflow when a push happens to the main branch
+      - main  # Trigger the workflow on pushes to the main branch
   pull_request:
     branches:
       - main  # Trigger on pull requests to the main branch
 
 jobs:
   dedup:
-    runs-on: ubuntu-latest  # Specify the OS for the job
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Ensures the full history is fetched
+          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt  # Ensure you have a requirements.txt file
+      # Remove or comment out the install dependencies step if you don't have requirements.txt
+      # - name: Install dependencies
+      #   run: |
+      #     pip install -r requirements.txt
 
       - name: Run deduplication script
         run: |
-          python deduplicate.py  # Adjust this based on your actual script
+          python deduplication.py  # Adjust this based on your actual script
 
       - name: Commit and push changes
         run: |
