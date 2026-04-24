@@ -46,7 +46,7 @@ jobs:
 
       - name: Build registry entries
         run: |
-          python3 - <<'EOF'
+          python3 - << 'EOF'
 import os
 import json
 import hashlib
