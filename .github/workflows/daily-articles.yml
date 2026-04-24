@@ -1,9 +1,9 @@
-name: Auto Generate Articles Every Minute
+name: Auto Generate Articles
 
 on:
   schedule:
-    - cron: '* * * * *'  # Runs every minute
-  workflow_dispatch:  # Optional: allows manual triggering
+    - cron: '* * * * *'  # This cron expression runs every minute
+  workflow_dispatch:  # This allows you to manually trigger the workflow as well
 
 jobs:
   generate_articles:
@@ -22,6 +22,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run script to generate articles
+      - name: Run the article generation script
         run: |
-          python generate_and_upload_keywords.py  # Replace with your script
+          python generate_and_upload_keywords.py || { echo 'Script failed!'; exit 1; }
+
+      - name: Upload to S3 (if applicable)
+        run: |
+          aws s3 cp path/to/generated/file s3://your-bucket-name/ --recursive
