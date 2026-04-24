@@ -1,0 +1,126 @@
+import csv
+import os
+import json
+import boto3
+from botocore.exceptions import NoCredentialsError
+
+# AWS S3 setup
+s3_bucket_name = 'YOUR_BUCKET_NAME'  # Replace with your S3 bucket name
+aws_region = 'us-west-2'  # Replace with your AWS region
+s3_client = boto3.client('s3', region_name=aws_region)
+
+# Define your affiliate link structure
+affiliate_link = "https://www.linkconnector.com/ta.php?lc=007949096598005765&atid=MaxlendT"
+
+# Example categories for keyword grouping
+keyword_categories = {
+    'loans': ["cash loan", "payday loan", "personal loan", "quick loan", "same day loan", "loan approval"],
+    'emergency_loans': ["emergency loan", "urgent cash", "fast emergency loan", "same day payday loan"],
+    'cash_advance': ["cash advance", "instant cash", "emergency cash advance", "short term cash", "quick cash advance"],
+    'bad_credit_loans': ["bad credit loans", "loans for bad credit", "no credit check loans", "loan approval bad credit"],
+}
+
+# Generate a list of keywords by iterating through the categories
+keywords = []
+for category, terms in keyword_categories.items():
+    for term in terms:
+        keywords.append(term)
+
+# Extend the list of keywords to simulate 10 million keywords (just an example, load from a file for efficiency in practice)
+additional_keywords = []
+for _ in range(250):  # Repeat 250 times to generate a larger list (2.5 million keywords)
+    additional_keywords.extend(keywords)
+keywords = additional_keywords
+
+# Function to generate content, meta tags, and structured data for a batch of keywords
+def generate_content_for_batch(start_index, end_index, batch_number):
+    batch_filename = f'batch_{batch_number}.csv'
+    
+    with open(batch_filename, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Keyword', 'Meta Title', 'Meta Description', 'Content', 'Affiliate Link', 'Structured Data', 'Canonical Link'])
+        
+        for i in range(start_index, end_index):
+            keyword = keywords[i]
+            
+            # Meta Title
+            meta_title = f"Get a Payday Loan for {keyword} | MaxLend"
+            
+            # Meta Description
+            meta_description = f"Need a {keyword}? Apply for a payday loan to get fast and easy access to the money you need. Instant approval and no credit check!"
+            
+            # Content (HTML)
+            content = f"""
+            <h1>{meta_title}</h1>
+            <p>If you're facing a {keyword}, a payday loan could be the solution you need. In this guide, we explain how payday loans work, how you can apply for one, and what to expect in the process.</p>
+            <h2>What is a Payday Loan?</h2>
+            <p>A payday loan is a short-term loan that provides quick cash to help cover emergency expenses like {keyword}. These loans are often available with little paperwork and can be approved in minutes.</p>
+            <h2>How to Apply for a Payday Loan for {keyword}</h2>
+            <p>Applying for a payday loan is simple. Follow these steps:</p>
+            <ol>
+                <li>Fill out the application form online</li>
+                <li>Submit proof of income and identification</li>
+                <li>Get approval in minutes and receive funds the same day</li>
+            </ol>
+            <h2>Conclusion</h2>
+            <p>If you need a payday loan for {keyword}, MaxLend can help. <a href="{affiliate_link}" target="_blank" rel="nofollow sponsored">Apply now for fast approval!</a></p>
+            """
+            
+            # Structured Data (JSON-LD)
+            structured_data = {
+                "@context": "https://schema.org",
+                "@type": "FinancialProduct",
+                "name": f"Payday Loan for {keyword}",
+                "description": f"A payday loan for {keyword}, providing instant approval and easy access to cash.",
+                "brand": "MaxLend",
+                "url": affiliate_link,
+                "offers": {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "200",
+                    "url": affiliate_link
+                }
+            }
+            structured_data_json = json.dumps(structured_data)
+            
+            # Canonical Link for SEO
+            canonical_link = f"https://www.yoursite.com/{keyword.replace(' ', '-')}-payday-loan"
+            
+            # Write the data to the CSV file
+            writer.writerow([keyword, meta_title, meta_description, content, affiliate_link, structured_data_json, canonical_link])
+
+    print(f"Batch {batch_number} processed and saved locally to {batch_filename}")
+    
+    # Upload the CSV file to S3
+    upload_to_s3(batch_filename)
+
+# Function to upload the CSV file to S3
+def upload_to_s3(filename):
+    try:
+        # Upload the file to the specified S3 bucket
+        s3_client.upload_file(filename, s3_bucket_name, filename)
+        print(f"Uploaded {filename} to S3 successfully!")
+        # Optionally, delete the local file after upload
+        os.remove(filename)
+    except FileNotFoundError:
+        print(f"File {filename} not found.")
+    except NoCredentialsError:
+        print("Credentials not available.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Function to handle processing in batches
+def process_keywords_in_batches():
+    total_keywords = len(keywords)
+    batch_size = 100000  # 100,000 keywords per batch
+    total_batches = total_keywords // batch_size + (1 if total_keywords % batch_size > 0 else 0)
+    
+    for batch_number in range(1, total_batches + 1):
+        start_index = (batch_number - 1) * batch_size
+        end_index = min(start_index + batch_size, total_keywords)
+        
+        # Process each batch and generate content
+        generate_content_for_batch(start_index, end_index, batch_number)
+
+# Run the batch processing
+process_keywords_in_batches()
