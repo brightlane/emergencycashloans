@@ -31,12 +31,7 @@ jobs:
         run: |
           git pull origin main --rebase
 
-      # Only install dependencies if requirements.txt exists
-      - name: Install dependencies
-        if: -e requirements.txt
-        run: |
-          pip install -r requirements.txt  # Ensure you have a requirements.txt file
-
+      # Removed the "Install dependencies" step since it's unnecessary
       - name: Initialize registry system
         run: |
           mkdir -p registry
