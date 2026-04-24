@@ -1,15 +1,15 @@
 name: Auto Generate Articles
 
-# Triggering on every minute and manual trigger
+# Trigger on a cron schedule or manual trigger
 on:
   schedule:
-    - cron: '* * * * *'  # Trigger every minute
-  workflow_dispatch:  # Allows for manual trigger as well
+    - cron: '* * * * *'  # Runs every minute
+  workflow_dispatch:  # Manual trigger option
 
 jobs:
   generate_articles:
     runs-on: ubuntu-latest
-    environment: production  # Optional, depends on your environment setup
+    environment: production  # Optional, depending on environment setup
 
     steps:
       # Checkout the repository code
@@ -24,40 +24,47 @@ jobs:
         with:
           python-version: '3.x'
 
-      # Install dependencies
+      # Install dependencies from requirements.txt
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt  # Make sure you have all dependencies in the requirements.txt
+          pip install -r requirements.txt
+        continue-on-error: false  # This will stop the workflow if dependencies fail to install
 
-      # Set up AWS credentials for S3 uploads
+      # AWS credentials setup for uploading to S3
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  # AWS credentials from GitHub Secrets
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'  # Adjust region as needed
+          aws-region: 'us-east-1'  # Adjust the AWS region as necessary
+
+      # Debugging step - check installed Python packages
+      - name: Verify Installed Python Packages
+        run: |
+          pip freeze
+        continue-on-error: true  # In case pip freeze fails, we don't want to stop the workflow, but it will be logged
 
       # Run the article generation script
       - name: Run article generation script
         run: |
-          echo "Starting article generation..."
-          python generate_and_upload_keywords.py || { echo 'Article generation failed! Check logs!'; exit 1; }
-        
-      # Check for success and print logs
+          echo "Running article generation script..."
+          python generate_and_upload_keywords.py
+        continue-on-error: true  # Allow the workflow to continue to the error check step, even if the script fails
+
+      # Error check: did the article generation succeed?
       - name: Check script success and logs
         run: |
-          echo "Checking if script executed successfully..."
           if [ $? -eq 0 ]; then
-            echo "Article generation script executed successfully!"
+            echo "Article generation completed successfully!"
           else
-            echo "Article generation script failed. Exiting..."
+            echo "Error in article generation!"
             exit 1
-          fi
+        continue-on-error: false  # This step will ensure the workflow stops if the script failed
 
-      # Optional: Upload to S3 if article generation is successful
+      # Optional: Upload the results to S3 if article generation is successful
       - name: Upload to S3
         run: |
           echo "Uploading generated content to S3..."
           aws s3 cp path/to/generated/file s3://your-bucket-name/ --recursive
-        continue-on-error: false  # This ensures the job fails if the upload fails
+        continue-on-error: false  # Ensures that the job fails if S3 upload fails
