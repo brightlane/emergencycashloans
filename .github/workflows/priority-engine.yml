@@ -2,8 +2,11 @@ name: Priority Engine
 
 on:
   push:
-    branches: ["main"]
-  workflow_dispatch:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   priority-engine:
@@ -11,22 +14,24 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
+      # If you don't need Node.js dependencies, remove the setup and install steps.
+      # - name: Set up Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '20.x'
 
-      - name: Install dependencies
-        run: npm install
+      # - name: Install dependencies
+      #   run: |
+      #     npm install
 
-      - name: Run priority engine
-        run: npm run priority --if-present
+      - name: Run the priority engine script
+        run: |
+          python3 priority-engine.py  # Or your actual script
 
-      - name: Build step
-        run: npm run build --if-present
-
-      - name: Test step
-        run: npm test --if-present
+      - name: Commit and push changes
+        run: |
+          git add .
+          git commit -m "Update priority engine results" || echo "No changes"
+          git push origin main
