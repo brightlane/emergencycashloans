@@ -1,36 +1,38 @@
-name: Daily SEO Articles
-
-permissions:
-  contents: write
+name: Dedup Engine
 
 on:
-  schedule:
-    - cron: "0 2 * * *"   # once per day
-  workflow_dispatch:
+  push:
+    branches:
+      - main  # Trigger the workflow when a push happens to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger on pull requests to the main branch
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  dedup:
+    runs-on: ubuntu-latest  # Specify the OS for the job
 
     steps:
-
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
-          node-version: 20
+          fetch-depth: 0  # Ensures the full history is fetched
 
-      - name: Run article generator
-        run: node article-batch-generator.js
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-      - name: Commit articles
+      - name: Install dependencies
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          pip install -r requirements.txt  # Ensure you have a requirements.txt file
 
-          git add pages/
+      - name: Run deduplication script
+        run: |
+          python deduplicate.py  # Adjust this based on your actual script
 
-          git diff --cached --quiet && echo "No changes" && exit 0
-
-          git commit -m "Daily SEO article batch"
-          git push
+      - name: Commit and push changes
+        run: |
+          git add .
+          git commit -m "Fix duplicate entries" || echo "No changes"
+          git push origin main
