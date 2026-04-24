@@ -34,14 +34,13 @@ jobs:
       - name: Initialize registry system
         run: |
           mkdir -p registry
-
           if [ ! -f registry/output-log.json ]; then
             echo "[]" > registry/output-log.json
           fi
 
       - name: Build registry entries
         run: |
-          python3 - << 'EOF'
+          python3 - <<'EOF'
 import os
 import json
 import hashlib
@@ -49,14 +48,17 @@ from datetime import datetime
 
 REGISTRY_FILE = "registry/output-log.json"
 
+# Load existing registry data
 with open(REGISTRY_FILE, "r") as f:
     data = json.load(f)
 
 def hash_content(content):
+    """Generate a hash for the content of a file."""
     return hashlib.md5(content.encode()).hexdigest()
 
 new_entries = []
 
+# Traverse files in the directory and create new registry entries
 for root, dirs, files in os.walk("."):
     for file in files:
         if file.endswith(".json") or file.endswith(".txt"):
@@ -73,23 +75,26 @@ for root, dirs, files in os.walk("."):
                     "size": len(content)
                 }
 
-                # avoid duplicates in registry
+                # Avoid duplicates in the registry
                 if not any(e["hash"] == entry["hash"] for e in data):
                     new_entries.append(entry)
 
-            except:
+            except Exception as e:
+                print(f"Error reading {path}: {e}")
                 pass
 
+# Add new entries to the registry
 data.extend(new_entries)
 
+# Write the updated data back to the registry file
 with open(REGISTRY_FILE, "w") as f:
     json.dump(data, f, indent=2)
+
+print(f"Added {len(new_entries)} new entries to the registry.")
 EOF
 
       - name: Commit registry updates
         run: |
           git add registry/
-
           git commit -m "Update output registry (system memory layer)" || echo "No changes"
-
           git push origin main
