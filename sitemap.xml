@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>https://brightlane.github.io/emergencycashloans/</loc></url>
-<url><loc>https://brightlane.github.io/emergencycashloans/pages/cash-advance-guide.html</loc></url>
-<url><loc>https://brightlane.github.io/emergencycashloans/pages/emergency-cash-options.html</loc></url>
-<url><loc>https://brightlane.github.io/emergencycashloans/pages/fast-loan-approval-tips.html</loc></url>
-<url><loc>https://brightlane.github.io/emergencycashloans/pages/installment-loans-guide.html</loc></url>
-<url><loc>https://brightlane.github.io/emergencycashloans/pages/payday-loans-explained.html</loc></url>
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://brightlane.github.io/emergencycashloans/</loc>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- If you ONLY have index.html (single-page site), stop here -->
+  <!-- GitHub Pages treats index.html as the root page -->
+
 </urlset>
