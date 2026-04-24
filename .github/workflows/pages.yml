@@ -1,35 +1,41 @@
-name: github-pages-deploy
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: github-pages
-  cancel-in-progress: true
+    branches:
+      - main  # Trigger deployment on push to the main branch
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v3
+      # Step 2: Set up Python (optional if you're using Python for site generation)
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          path: .
+          python-version: 3.x
 
-      - name: Deploy
-        id: deployment
+      # Step 3: Install dependencies (if any, you may not need this step if it's static content)
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt  # if you have requirements.txt
+
+      # Step 4: Build your site (if necessary, depending on your setup)
+      - name: Build site
+        run: |
+          echo "Building the site"
+          # Your actual build commands here
+
+      # Step 5: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
+        with:
+          artifact_id: ${{ steps.upload.outputs.artifact_id }}
+          pages_build_version: ${{ github.sha }}
+        environment:
+          name: github-pages  # Deployment environment to GitHub Pages
