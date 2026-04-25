@@ -31,7 +31,6 @@ jobs:
         run: |
           git pull origin main --rebase
 
-      # Removed the "Install dependencies" step since it's unnecessary
       - name: Initialize registry system
         run: |
           mkdir -p registry
@@ -41,58 +40,51 @@ jobs:
 
       - name: Build registry entries
         run: |
-          python3 - << 'EOF'
+          python3 -c "
 import os
 import json
 import hashlib
 from datetime import datetime
 
-REGISTRY_FILE = "registry/output-log.json"
+REGISTRY_FILE = 'registry/output-log.json'
 
-# Load existing registry data
-with open(REGISTRY_FILE, "r") as f:
+with open(REGISTRY_FILE, 'r') as f:
     data = json.load(f)
 
 def hash_content(content):
-    """Generate a hash for the content of a file."""
     return hashlib.md5(content.encode()).hexdigest()
 
 new_entries = []
 
-# Traverse files in the directory and create new registry entries
-for root, dirs, files in os.walk("."):
+for root, dirs, files in os.walk('.'):
     for file in files:
-        if file.endswith(".json") or file.endswith(".txt"):
+        if file.endswith('.json') or file.endswith('.txt'):
             path = os.path.join(root, file)
 
             try:
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, 'r', encoding='utf-8') as f:
                     content = f.read()
 
                 entry = {
-                    "file": path,
-                    "hash": hash_content(content),
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "size": len(content)
+                    'file': path,
+                    'hash': hash_content(content),
+                    'timestamp': datetime.utcnow().isoformat(),
+                    'size': len(content)
                 }
 
-                # Avoid duplicates in the registry
-                if not any(e["hash"] == entry["hash"] for e in data):
+                if not any(e['hash'] == entry['hash'] for e in data):
                     new_entries.append(entry)
 
-            except Exception as e:
-                print(f"Error reading {path}: {e}")
+            except Exception:
                 pass
 
-# Add new entries to the registry
 data.extend(new_entries)
 
-# Write the updated data back to the registry file
-with open(REGISTRY_FILE, "w") as f:
+with open(REGISTRY_FILE, 'w') as f:
     json.dump(data, f, indent=2)
 
-print(f"Added {len(new_entries)} new entries to the registry.")
-EOF
+print(f'Added {len(new_entries)} new entries')
+"
 
       - name: Commit registry updates
         run: |
