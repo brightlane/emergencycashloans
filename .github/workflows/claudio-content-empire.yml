@@ -2,33 +2,24 @@ name: Claudio Content Empire
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  generate:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      # FAST FIX: avoids npm ci lockfile failure
-      - name: Install dependencies (safe mode)
-        run: npm install || echo "No dependencies to install"
+      - name: Install dependencies
+        run: npm install
 
-      # Continue pipeline safely even if scripts are missing
-      - name: Run content generation
-        run: npm run generate --if-present || true
-
-      - name: Build step
-        run: npm run build --if-present || true
-
-      - name: Test step
-        run: npm test --if-present || true
+      - name: Run article pipeline
+        run: node article-pipeline.js
