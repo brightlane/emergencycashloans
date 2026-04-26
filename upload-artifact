@@ -1,73 +1,39 @@
-name: Article Generation Pipeline
+name: Build and Deploy
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
-  setup:
-    name: Setup Node.js and Dependencies
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      # Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v3  # This is still valid
 
-      # Step 2: Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'  # Match your node version
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3  # No deprecation, this is good
 
-      # Step 3: Install dependencies
+      # Install dependencies and build the app
       - name: Install dependencies
-        run: |
-          npm install
+        run: npm install
 
-  generate_articles:
-    name: Generate Articles
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Build the app
+        run: npm run build
 
-      # Step 2: Run article generation pipeline
-      - name: Run article-pipeline.js
-        run: |
-          node article-pipeline.js
-        env:
-          NODE_ENV: production
-
-  report:
-    name: Generate Report
-    runs-on: ubuntu-latest
-    needs: generate_articles
-    steps:
-      # Step 1: Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Step 2: Upload the generated report to GitHub artifacts
-      - name: Upload Article Pipeline Report
-        uses: actions/upload-artifact@v4  # Updated to v4
+      # Upload the build artifacts (updated to v4)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4  # Updated from v3 to v4
         with:
-          name: article-pipeline-report
-          path: output/article-pipeline-report.json
+          name: build-artifacts
+          path: ./build
 
-  clean_up:
-    name: Clean Up Lock File
-    runs-on: ubuntu-latest
-    needs: report
-    steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      # Deploy your app (or another step after build)
+      - name: Deploy
+        run: ./deploy.sh
 
-      # Step 2: Clean up the lock file to prevent blocking the next run
-      - name: Remove Lock File
-        run: |
-          rm -f output/.article-pipeline.lock
+      # You could add more steps depending on your workflow...
