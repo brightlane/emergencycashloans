@@ -1,0 +1,15 @@
+{
+  "name": "emergency-cash-loans",
+  "version": "1.0.0",
+  "description": "Generate blog posts related to emergency cash loans with affiliate links",
+  "main": "generate_articles.js",
+  "scripts": {
+    "start": "node generate_articles.js"
+  },
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "path": "^0.12.7"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
