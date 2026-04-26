@@ -3,41 +3,35 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - main  # Trigger on push to main branch
+      - main  # Trigger on push to the main branch
   pull_request:
     branches:
-      - main  # Trigger on pull request to main branch
+      - main  # Trigger on PR to main
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code from the repository
       - name: Checkout code
-        uses: actions/checkout@v3  # Using actions/checkout@v3 to pull the code
+        uses: actions/checkout@v3  # This is fine, no changes needed
 
-      # Set up Node.js (or adjust to your environment)
       - name: Set up Node.js
-        uses: actions/setup-node@v3  # Set up Node.js version 14 (can change to your version)
+        uses: actions/setup-node@v3
         with:
           node-version: '14'
 
-      # Install dependencies
       - name: Install dependencies
-        run: npm install  # Replace this with your actual dependency install command
+        run: npm install
 
-      # Build the application
       - name: Build the app
-        run: npm run build  # Replace with your build command, e.g., `npm run build`
+        run: npm run build
 
-      # Upload the build artifacts to GitHub (updated to v4)
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4  # Updated to v4 from the deprecated v3
+        uses: actions/upload-artifact@v4  # Ensure using v4 here
         with:
-          name: build-artifacts  # The name of the artifact
-          path: ./build  # Path to the build folder (change as needed)
+          name: build-artifacts
+          path: ./build
 
-      # Deploy your application (example deploy script)
-      - name: Deploy to Production
-        run: ./deploy.sh  # Replace with your actual deployment script/command
+      - name: Deploy
+        run: ./deploy.sh
