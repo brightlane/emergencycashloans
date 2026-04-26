@@ -1,0 +1,73 @@
+name: Article Generation Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  setup:
+    name: Setup Node.js and Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'  # Match your node version
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          npm install
+
+  generate_articles:
+    name: Generate Articles
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Run article generation pipeline
+      - name: Run article-pipeline.js
+        run: |
+          node article-pipeline.js
+        env:
+          NODE_ENV: production
+
+  report:
+    name: Generate Report
+    runs-on: ubuntu-latest
+    needs: generate_articles
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Upload the generated report to GitHub artifacts
+      - name: Upload Article Pipeline Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: article-pipeline-report
+          path: output/article-pipeline-report.json
+
+  clean_up:
+    name: Clean Up Lock File
+    runs-on: ubuntu-latest
+    needs: report
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Clean up the lock file to prevent blocking the next run
+      - name: Remove Lock File
+        run: |
+          rm -f output/.article-pipeline.lock
