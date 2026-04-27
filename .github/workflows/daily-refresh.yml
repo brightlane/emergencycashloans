@@ -1,0 +1,37 @@
+name: EmergencyCashLoans Vulture Refresh
+
+on:
+  schedule:
+    # Thursday at 04:15 UTC (Staggered from SkyScanner)
+    - cron: "15 4 * * 4"
+  workflow_dispatch: 
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Vulture Engine
+        run: |
+          node generate.js
+          node generate-sitemap.js
+          echo "EmergencyCashLoans Vulture Refresh Complete"
+
+      - name: Deploy to GitHub Pages
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Vulture Heartbeat: EmergencyCashLoans Weekly Sync"
+          branch: main
