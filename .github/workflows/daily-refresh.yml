@@ -2,7 +2,7 @@ name: EmergencyCashLoans Vulture Refresh
 
 on:
   schedule:
-    # Thursday at 04:15 UTC (Staggered to save your 2,000 mins)
+    # Thursday at 04:15 UTC
     - cron: "15 4 * * 4"
   workflow_dispatch: 
 
@@ -13,36 +13,37 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: 1. Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 2. Setup Environments
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
+      - name: 3. Install Dependencies
         run: |
-          # Installing the missing OpenAI module that caused the #3 failure
-          npm install openai dotenv 
+          echo "🚀 Starting Dependency Installation..."
+          npm install openai dotenv
           pip install requests boto3
+          echo "✅ Dependencies Installed Successfully."
 
-      - name: Run Vulture Engine
+      - name: 4. Run Vulture Engine
         run: |
-          # 1. Runs the Python generator (Confirmed working in last run)
+          echo "🦅 VULTURE STAGE 1: Starting Python Generator..."
           python article-generator.py
           
-          # 2. Runs the AI workers (Now has OpenAI dependency)
+          echo "🦅 VULTURE STAGE 2: Starting AI Blog Workers..."
           node ai-blog-worker.js
+          
+          echo "🦅 VULTURE STAGE 3: Starting SEO Finalizer..."
           node generate-seo-articles.js
-          echo "EmergencyCashLoans Vulture Refresh Complete"
+          echo "🏁 All Generation Engines Finished."
 
-      - name: Deploy to GitHub Pages
+      - name: 5. Deploy to GitHub Pages
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Vulture Heartbeat: EmergencyCashLoans Weekly Sync"
