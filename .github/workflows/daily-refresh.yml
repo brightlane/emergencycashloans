@@ -1,21 +1,45 @@
-- name: 4. Force Sync and Push
+name: MaxLend Vulture Sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'keywords.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  vulture-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: 2. Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 3. Run Engine
+        run: python article-generator.py
+
+      - name: 4. Force Sync and Push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 1. Add everything to the 'staging' area
+          # Stage the new files
           git add pages/*.html
           
-          # 2. Stash the changes so the floor is clean for a pull
-          git stash
+          # Use a 'Temporary Commit' instead of a stash to make the pull safer
+          git commit -m "Vulture: Internal Build" || echo "No changes"
           
-          # 3. Pull the latest changes from the repo (Rebase keeps it clean)
+          # Pull latest and rebase
           git pull --rebase origin main
           
-          # 4. Bring your pages back from the stash
-          git stash pop || echo "No stash to pop"
-          
-          # 5. Final add and commit
-          git add pages/*.html
-          git commit -m "MaxLend Empire Sync" || echo "No changes to commit"
+          # Push the final results
           git push origin main
