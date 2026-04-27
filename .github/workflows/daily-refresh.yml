@@ -2,7 +2,7 @@ name: EmergencyCashLoans Vulture Refresh
 
 on:
   schedule:
-    # Thursday at 04:15 UTC
+    # Thursday at 04:15 UTC (Staggered to save your 2,000 mins)
     - cron: "15 4 * * 4"
   workflow_dispatch: 
 
@@ -28,13 +28,16 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          npm install
-          pip install requests boto3  # Boto3 found in your commit history
+          # Installing the missing OpenAI module that caused the #3 failure
+          npm install openai dotenv 
+          pip install requests boto3
 
       - name: Run Vulture Engine
         run: |
-          # Running your high-volume generators
+          # 1. Runs the Python generator (Confirmed working in last run)
           python article-generator.py
+          
+          # 2. Runs the AI workers (Now has OpenAI dependency)
           node ai-blog-worker.js
           node generate-seo-articles.js
           echo "EmergencyCashLoans Vulture Refresh Complete"
