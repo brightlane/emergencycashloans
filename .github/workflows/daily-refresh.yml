@@ -1,7 +1,7 @@
-name: "Z-RUN-VULTURE-ENGINE" # This name starts with Z so it's easy to find
+name: "Z-ACTIVATE-THIS-ONE" # Look for this at the bottom of your sidebar
 
 on:
-  workflow_dispatch: # This is what creates the "Run" button
+  workflow_dispatch: 
   schedule:
     - cron: "15 4 * * 4"
 
@@ -12,10 +12,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 1. Checkout Code
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. Setup Tools
+      - name: 2. Setup
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -23,18 +23,18 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 3. Install ALL Dependencies
+      - name: 3. Install All
         run: |
           npm install openai axios dotenv fs-extra path
           pip install requests boto3 pandas
 
-      - name: 4. Run Generation
+      - name: 4. Run Everything
         run: |
           python article-generator.py
           node ai-blog-worker.js
           node generate-seo-articles.js
 
-      - name: 5. Save to Site
+      - name: 5. Save
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Vulture Update"
+          commit_message: "Vulture Heartbeat"
