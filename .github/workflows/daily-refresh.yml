@@ -1,7 +1,7 @@
-name: "! AA - START HERE" # This forces it to the top of your 2,500+ list
+name: "! AA - MAXLEND VULTURE"
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
   schedule:
     - cron: "15 4 * * 4"
 
@@ -12,27 +12,33 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 1. Setup
+      - name: 1. Checkout Code
         uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: 2. Setup Environments
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: 2. Install
+      - name: 3. Manual Install
         run: |
-          npm install openai axios dotenv fs-extra path
+          # We skip the requirements.txt check entirely here
           pip install requests boto3 pandas
+          npm install openai axios dotenv fs-extra path
 
-      - name: 3. Run
+      - name: 4. Run MaxLend Scrambler
         run: |
+          # This triggers the descrambling logic
           python article-generator.py
-          node ai-blog-worker.js
-          node generate-seo-articles.js
+          
+          # Optional: Run JS workers only if they exist
+          [ -f ai-blog-worker.js ] && node ai-blog-worker.js || echo "ai-blog-worker.js not found"
 
-      - name: 4. Deploy
+      - name: 5. Commit and Push
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Vulture Heartbeat"
+          commit_message: "Vulture Sync: MaxLend Content Generated"
+          branch: main
