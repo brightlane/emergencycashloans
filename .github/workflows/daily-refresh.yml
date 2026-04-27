@@ -2,43 +2,25 @@ name: "! AA - MAXLEND VULTURE"
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "15 4 * * 4"
+  push:
+    branches: [ main ]
 
 permissions:
   contents: write
 
 jobs:
-  build-and-deploy:
+  vulture-run:
     runs-on: ubuntu-latest
     steps:
-      - name: 1. Checkout Code
-        uses: actions/checkout@v4
-
-      - name: 2. Setup Environments
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
-      - name: 3. Manual Install
-        run: |
-          # We skip the requirements.txt check entirely here
-          pip install requests boto3 pandas
-          npm install openai axios dotenv fs-extra path
-
-      - name: 4. Run MaxLend Scrambler
-        run: |
-          # This triggers the descrambling logic
-          python article-generator.py
-          
-          # Optional: Run JS workers only if they exist
-          [ -f ai-blog-worker.js ] && node ai-blog-worker.js || echo "ai-blog-worker.js not found"
-
-      - name: 5. Commit and Push
+      - name: 1. Install
+        run: pip install requests boto3 pandas
+      - name: 2. Run MaxLend Engine
+        run: python article-generator.py
+      - name: 3. Save to Repo
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Vulture Sync: MaxLend Content Generated"
-          branch: main
+          commit_message: "MaxLend Empire Sync"
