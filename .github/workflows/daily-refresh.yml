@@ -1,4 +1,4 @@
-name: "Z-ACTIVATE-THIS-ONE" # Look for this at the bottom of your sidebar
+name: "! AA - START HERE" # This forces it to the top of your 2,500+ list
 
 on:
   workflow_dispatch: 
@@ -12,29 +12,27 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 1. Checkout
+      - name: 1. Setup
         uses: actions/checkout@v4
-
-      - name: 2. Setup
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: 3. Install All
+      - name: 2. Install
         run: |
           npm install openai axios dotenv fs-extra path
           pip install requests boto3 pandas
 
-      - name: 4. Run Everything
+      - name: 3. Run
         run: |
           python article-generator.py
           node ai-blog-worker.js
           node generate-seo-articles.js
 
-      - name: 5. Save
+      - name: 4. Deploy
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Vulture Heartbeat"
