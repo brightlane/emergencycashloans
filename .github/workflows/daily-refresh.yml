@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+    paths:
+      - 'keywords.txt' # Only triggers on keyword updates to prevent loops
 
 permissions:
   contents: write
@@ -12,15 +14,27 @@ jobs:
   vulture-run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - name: 1. Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: 2. Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: 1. Install
-        run: pip install requests boto3 pandas
-      - name: 2. Run MaxLend Engine
+
+      - name: 3. Run Engine
         run: python article-generator.py
-      - name: 3. Save to Repo
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "MaxLend Empire Sync"
+
+      - name: 4. Force Sync and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add pages/*.html
+          
+          # This pulls recent changes from other workflows before pushing yours
+          git pull --rebase origin main
+          
+          git commit -m "MaxLend Empire Sync" || echo "No changes"
+          git push origin main
