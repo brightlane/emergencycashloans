@@ -2,7 +2,7 @@ name: EmergencyCashLoans Vulture Refresh
 
 on:
   schedule:
-    # Thursday at 04:15 UTC (Staggered shift)
+    # Thursday at 04:15 UTC
     - cron: "15 4 * * 4"
   workflow_dispatch: 
 
@@ -16,6 +16,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -23,14 +28,16 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install requests
-          # Add any other libraries your script needs here
+          npm install
+          pip install requests boto3  # Boto3 found in your commit history
 
       - name: Run Vulture Engine
         run: |
-          # Use your actual python script name here
-          python manychat-gen.py
-          echo "Vulture Refresh Complete"
+          # Running your high-volume generators
+          python article-generator.py
+          node ai-blog-worker.js
+          node generate-seo-articles.js
+          echo "EmergencyCashLoans Vulture Refresh Complete"
 
       - name: Deploy to GitHub Pages
         uses: stefanzweifel/git-auto-commit-action@v5
