@@ -1,34 +1,9 @@
-name: EmergencyCashLoans Vulture Refresh
-
-on:
-  schedule:
-    # Thursday at 04:15 UTC
-    - cron: "15 4 * * 4"
-  workflow_dispatch: 
-
-permissions:
-  contents: write
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 1. Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: 2. Setup Environments
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: 3. Install Dependencies
+- name: 3. Install Dependencies
         run: |
-          echo "🚀 Starting Dependency Installation..."
-          npm install openai dotenv
-          pip install requests boto3
+          echo "🚀 Starting Full Dependency Installation..."
+          # Installing all modules required for AI and Web Requests
+          npm install openai axios dotenv fs-extra path
+          pip install requests boto3 pandas
           echo "✅ Dependencies Installed Successfully."
 
       - name: 4. Run Vulture Engine
@@ -42,9 +17,3 @@ jobs:
           echo "🦅 VULTURE STAGE 3: Starting SEO Finalizer..."
           node generate-seo-articles.js
           echo "🏁 All Generation Engines Finished."
-
-      - name: 5. Deploy to GitHub Pages
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Vulture Heartbeat: EmergencyCashLoans Weekly Sync"
-          branch: main
