@@ -1,6 +1,7 @@
 import os
 import random
 import shutil
+import re  # Added for sanitizing filenames
 from datetime import datetime
 
 # 1. MAXLEND CONFIG
@@ -9,7 +10,6 @@ MAXLEND_URL = "https://www.linkconnector.com/ta.php?lc=007949054182005142&atid=M
 def generate_html(keyword):
     date_str = datetime.now().strftime("%B %d, 2026")
     
-    # Randomly shuffle the order of these sections to avoid duplicate detection
     sections = [
         f"<section><h2>{keyword} Insights</h2><p>In 2026, managing {keyword} requires a flexible partner. MaxLend provides membership-based funding to help you bridge the gap.</p></section>",
         f"<div style='background:#f1f8f4;padding:25px;border:2px solid #28a745;border-radius:10px;'>"
@@ -36,11 +36,13 @@ def generate_html(keyword):
 </html>"""
 
 def main():
-    # Clean the pages directory
-    if os.path.exists('pages'): shutil.rmtree('pages')
-    os.makedirs('pages')
+    # Clean and recreate the pages directory
+    target_dir = 'pages'
+    if os.path.exists(target_dir):
+        shutil.rmtree(target_dir)
+    os.makedirs(target_dir)
 
-    # Load keywords from your keywords.txt
+    # Load keywords
     if os.path.exists('keywords.txt'):
         with open('keywords.txt', 'r') as f:
             keywords = [line.strip() for line in f if line.strip()]
@@ -49,9 +51,15 @@ def main():
 
     for kw in keywords:
         html = generate_html(kw)
-        with open(f"pages/{kw.lower().replace(' ', '-')}.html", 'w') as f:
+        
+        # SANITIZE FILENAME: Remove / and other bad characters to prevent FileNotFoundError
+        safe_name = re.sub(r'[^\w\s-]', '', kw.lower()).replace(' ', '-')
+        file_path = os.path.join(target_dir, f"{safe_name}.html")
+        
+        with open(file_path, 'w', encoding='utf-8') as f:
             f.write(html)
-    print(f"🏁 Vulture complete: {len(keywords)} MaxLend pages built.")
+            
+    print(f"🏁 Vulture complete: {len(keywords)} MaxLend pages built safely.")
 
 if __name__ == "__main__":
     main()
